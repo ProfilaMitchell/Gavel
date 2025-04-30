@@ -1,0 +1,65 @@
+{
+  "data": {
+    "id": 249,
+    "attributes": {
+      "prop_likes": 7,
+      "prop_dislikes": 1,
+      "prop_comments_number": 19,
+      "user_id": "626",
+      "createdAt": "2025-04-14T22:52:21.020Z",
+      "updatedAt": "2025-04-27T15:35:56.402Z",
+      "content": {
+        "id": 288,
+        "attributes": {
+          "proposal_id": "249",
+          "prop_rev_active": true,
+          "prop_abstract": "Cardano needs to expand in French-speaking countries, especially in Africa, where innovative ideas and technologies lag far behind those in English-speaking countries. The Inkuba Blockchain Center is a pilot project that may resolve the issue.",
+          "prop_motivation": "There are millions of people in French-speaking countries and regions throughout the world. Colonization played a role in dispersing the French language. Unfortunately, these populations remain behind in new innovative technologies such as blockchain.\nWe hear a lot about the British Empire but tend to forget that France also had an impressive colonial empire. It centered more around Africa, some parts of South America, and various Oceanic islands. Still, it was large enough that, for a time, French was the language of choice when meeting someone from another nationality.\n\nFrance occupied northern West Africa, reaching fairly deep into Central Africa. It all began with trading posts along the shore of Senegal, starting in 1624. \nHere is a list of West African countries where French is still an official language or is at least spoken by a large segment of the population:\n\nB\u00e9nin, Burkina-Faso, Cameroon, Democratic Republic of Congo, Ivory Coast, Gabon, Guinea, Nigeria, Senegal, Togo, Republic of Central Africa, Equatorial Guinea, and Chad.\n",
+          "prop_rationale": "Once established in Burkina Faso, the Inkuba Blockchain Center may expand to other countries. Support and help this pilot project take place via the proposed special and unique project funding.\nBy starting in Burkina Faso, the Inkuba Blockchain Center is trying to turn challenges into opportunities by creating a permanent hub where developers can receive continued education, mentorship, and resources to build blockchain solutions that address local needs while contributing to the global Cardano ecosystem. ",
+          "gov_action_type_id": "1",
+          "prop_name": "Support Efforts for Cardano to expand in French Speaking Countries.",
+          "is_draft": false,
+          "user_id": "626",
+          "prop_submitted": false,
+          "prop_submission_tx_hash": null,
+          "prop_submission_date": null,
+          "createdAt": "2025-04-24T20:18:17.464Z",
+          "updatedAt": "2025-04-24T20:18:17.464Z",
+          "proposal_links": [
+            {
+              "id": 378,
+              "prop_link": "https://gov.tools/budget_discussion/54",
+              "prop_link_text": "None"
+            },
+            {
+              "id": 379,
+              "prop_link": "https://dig.watch/updates/few-developing-countries-overperform-frontier-technologies-most-lag-behind-un-report",
+              "prop_link_text": "None"
+            }
+          ],
+          "proposal_withdrawals": [
+            {
+              "id": 258,
+              "prop_receiving_address": null,
+              "prop_amount": null
+            }
+          ],
+          "proposal_constitution_content": {
+            "data": null
+          },
+          "gov_action_type": {
+            "id": 1,
+            "attributes": {
+              "gov_action_type_name": "Info Action",
+              "createdAt": "2024-08-27T11:59:38.507Z",
+              "updatedAt": "2024-08-27T11:59:39.600Z",
+              "publishedAt": "2025-02-21T11:56:55.808Z"
+            }
+          }
+        }
+      },
+      "user_govtool_username": "youthpromo"
+    }
+  },
+  "meta": {}
+}

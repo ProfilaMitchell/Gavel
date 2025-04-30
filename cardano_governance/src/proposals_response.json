@@ -1,0 +1,60 @@
+{
+  "data": [
+    {
+      "id": 275,
+      "attributes": {
+        "prop_likes": 2,
+        "prop_dislikes": 0,
+        "prop_comments_number": 1,
+        "user_id": "1926",
+        "createdAt": "2025-04-28T20:31:53.430Z",
+        "updatedAt": "2025-04-30T06:35:18.989Z",
+        "user_govtool_username": "lewis.a.shephard",
+        "content": {
+          "id": 291,
+          "attributes": {
+            "proposal_id": "275",
+            "prop_rev_active": true,
+            "prop_abstract": "In my early days in crypto, I was inspired by the excitement of \"Ethereum killer\" narratives. Cardano stood out to me not just for bold promises but for the deeper mission of patience, research, science, and inclusion. After experiencing both success and painful mistakes \u2014 including a 1,700 scam \u2014 I realized that Cardano's true strength lies not in competition, but in forging its own resilient path. \n\nThis reflection proposes that Cardano should continue encouraging ambition and exploration, while strengthening protections against malicious actors. Without becoming out of touch with the reality of human behaviour.\n\nPersonal Statement Edit V1: Now, after a few years of learning, I realize it's not about \"killing\" other projects. It's about building something worthy and lasting on its own terms: a system grounded in patience, research, sustainability, and bold but thoughtful growth.\n\nLike many newcomers, I made mistakes. Driven by greed and hope, I was scammed out of $1,700 worth of Ethereum after being lazy.\n\nThat loss could have driven me away from crypto altogether. Instead, through four years of financial stress, I kept slowly growing my ADA holdings \u2014 feeling a quiet connection to Charles Hoskinson and the deeper mission behind Cardano.\n\nCharles reminded me of the ones who encouraged my reckless energy into technical learning instead of drifting without purpose. That spirit kept me anchored even when the broader crypto space was full of noise, hype, and disappointment. After financial stress I keep increasing my ADA to this day!",
+            "prop_motivation": "Many newcomers to crypto still fall victim to scams, manipulative hype, and predatory projects.\n\nI experienced it personally: ironically, I believed I could outsmart a scam bot by \"changing the script\" and thought I was being clever \u2014 but that misplaced confidence was exactly what the scam exploited.\n\nIt taught me that intelligence alone isn't enough in crypto; even semi-experienced users can be vulnerable when emotion, ambition, and partial knowledge mix.\n\nWithout proactive education, transparency, and safer frameworks, Cardano risks alienating both newcomers and veterans alike \u2014 eroding trust and slowing sustainable growth.",
+            "prop_rationale": "While Cardano champions decentralization, openness, and permissionless innovation, these same strengths also allow deception to flourish.\nScammers exploit trust and excitement faster than platforms like YouTube or explorers like Etherscan can adapt.\nBig tech struggles to stop mass scams due to volume, speed, and legal gray areas.\nMeanwhile, explorers present all blockchain activity equally, making it hard for users to distinguish legitimate projects from malicious ones.\n\nRather than imposing rigid controls, Cardano should explore voluntary, opt-in protection layers:\n\nWallet-integrated educational prompts about scam patterns and decision-making.\n\nOptional risk scoring for dApps and staking pools.\n\nCommunity-driven \"auditor badges\" to highlight vetted, transparent projects.\n\nResearch into opt-in crypto insurance models without compromising decentralization.\n\nThese initiatives empower users to explore boldly but wisely \u2014 preserving Cardano\u2019s spirit of ambition, while building resilience against deception.\n\nStrengthening trust strengthens Cardano itself.",
+            "gov_action_type_id": "1",
+            "prop_name": "Freedom with Protection.",
+            "is_draft": false,
+            "user_id": "1926",
+            "prop_submitted": false,
+            "prop_submission_tx_hash": null,
+            "prop_submission_date": null,
+            "createdAt": "2025-04-28T20:37:07.927Z",
+            "updatedAt": "2025-04-28T20:37:07.927Z",
+            "proposal_links": [],
+            "proposal_withdrawals": [
+              {
+                "id": 261,
+                "prop_receiving_address": null,
+                "prop_amount": null
+              }
+            ],
+            "proposal_constitution_content": null,
+            "gov_action_type": {
+              "id": 1,
+              "attributes": {
+                "gov_action_type_name": "Info Action",
+                "createdAt": "2024-08-27T11:59:38.507Z",
+                "updatedAt": "2024-08-27T11:59:39.600Z",
+                "publishedAt": "2025-02-21T11:56:55.808Z"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "start": 0,
+      "limit": 1,
+      "total": 43
+    }
+  }
+}

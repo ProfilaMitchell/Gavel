@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gavel Agent</title>
+    <style>
+        /* Basic styling for layout */
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto; /* Center content */
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .input-area {
+            display: flex; /* Arrange input and button side-by-side */
+            gap: 10px; /* Add space between input and button */
+            margin-bottom: 20px;
+        }
+        #proposalQueryInput {
+            flex-grow: 1; /* Allow input to take available space */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #analyzeButton {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        #analyzeButton:hover {
+            background-color: #0056b3;
+        }
+        #gavelImage {
+             display: block; /* Make image a block element */
+             margin: 0 auto 20px auto; /* Center image and add bottom margin */
+             max-width: 150px; /* Limit image size */
+             height: auto; /* Maintain aspect ratio */
+        }
+        /* Style for output areas */
+        .output-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed #eee;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            white-space: pre-wrap; /* Preserve formatting */
+            word-wrap: break-word; /* Wrap long lines */
+            overflow-wrap: break-word;
+            font-family: monospace; /* Good for displaying code-like data */
+        }
+        /* style for pre tags */
+        pre {
+             overflow-wrap: break-word; /* Add here too */
+             overflow-x: auto;
+             padding-bottom: 10px; /* Add a little space for the scrollbar if it appears */
+             background-color: #efefef; /* Slightly different background for clarity */
+             border-radius: 3px;
+             padding: 10px;
+             /* Optional: Add a horizontal scrollbar if breaking isn't enough */
+             /* overflow-x: auto; */
+        }
+
+         h2 {
+             margin-top: 30px;
+             border-bottom: 1px solid #eee;
+             padding-bottom: 5px;
+         }
+    </style>
+</head>
+<body>
+    <img id="gavelImage" src="/static/GavelBlue.png" alt="Gavel Image Placeholder">
+
+    <h1>Cardano Governance Agent (Gavel)</h1>
+
+    <div class="input-area">
+        <input type="text" id="proposalQueryInput" placeholder="Enter Proposal ID or 'latest'">
+        <button id="analyzeButton">Analyze Proposal</button>
+    </div>
+
+    <div id="purchaseInfo" class="output-section" style="display: none;">
+        <h2>Action Required: Simulate Purchase</h2>
+        <p>Please use the details below to call the Masumi `POST /purchase` endpoint:</p>
+        <pre id="purchaseDetails"></pre> </div>
+
+    <div id="jobStatus" class="output-section" style="display: none;">
+         <h2>Job Status</h2>
+         <p id="statusText"></p>
+    </div>
+
+    <div id="jobResult" class="output-section" style="display: none;">
+        <h2>Analysis Result</h2>
+        <pre id="resultText"></pre> </div>
+
+        <script>
+            // Get references to HTML elements
+            const queryInput = document.getElementById('proposalQueryInput');
+            const analyzeButton = document.getElementById('analyzeButton');
+            const purchaseInfoDiv = document.getElementById('purchaseInfo');
+            const purchaseDetailsPre = document.getElementById('purchaseDetails');
+            const jobStatusDiv = document.getElementById('jobStatus');
+            const statusTextP = document.getElementById('statusText');
+            const jobResultDiv = document.getElementById('jobResult');
+            const resultTextPre = document.getElementById('resultText');
+    
+            // Variables
+            let currentJobId = null;
+            let pollingIntervalId = null; // To store the interval ID for stopping later
+    
+            // --- Function to fetch final result ---
+            async function fetchResult(jobId) {
+                statusTextP.textContent = `Job ${jobId} completed. Fetching result...`;
+                try {
+                    const response = await fetch(`/result/${jobId}`); // GET request by default
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(`HTTP error ${response.status} fetching result: ${errorData}`);
+                    }
+                    const data = await response.json();
+                    if (data.result) {
+                        // Display the result - adjust formatting as needed
+                        resultTextPre.textContent = JSON.stringify(data.result, null, 2); // Pretty-print JSON result
+                    } else {
+                        resultTextPre.textContent = "Job completed, but no result data was returned.";
+                    }
+                    jobResultDiv.style.display = 'block'; // Show the result section
+    
+                } catch (error) {
+                    console.error('Error fetching result:', error);
+                    resultTextPre.textContent = `Error fetching result: ${error.message}`;
+                    jobResultDiv.style.display = 'block'; // Show error in result area
+                } finally {
+                     analyzeButton.disabled = false; // Re-enable button after completion
+                }
+            }
+    
+            // --- Function to check job status ---
+            async function checkStatus(jobId) {
+                if (!jobId) return; // Don't check if no job ID
+    
+                try {
+                    const response = await fetch(`/status/${jobId}`);
+                    if (!response.ok) {
+                         // Don't stop polling on temporary server error maybe?
+                         // Or handle specific errors differently. For now, just log.
+                        console.error(`HTTP error ${response.status} checking status.`);
+                        // Optionally update status text with temporary error
+                        // statusTextP.textContent = `Temporarily unable to check status (Error ${response.status}). Retrying...`;
+                        return; // Continue polling
+                    }
+    
+                    const data = await response.json();
+    
+                    // Update status display
+                    let statusMessage = `Status: ${data.status}`;
+                    if(data.payment_status) {
+                        statusMessage += ` (Payment: ${data.payment_status})`;
+                    }
+                     if(data.message) {
+                        statusMessage += `\nMessage: ${data.message}`;
+                    }
+                    statusTextP.textContent = statusMessage;
+    
+                    // Check if job is finished
+                    if (data.status === 'completed' || data.status === 'failed') {
+                        if (pollingIntervalId) {
+                            clearInterval(pollingIntervalId); // Stop polling
+                            pollingIntervalId = null; // Clear interval ID
+                            console.log(`Polling stopped for job ${jobId}. Final status: ${data.status}`);
+                        }
+    
+                        if (data.status === 'completed') {
+                            fetchResult(jobId); // Fetch the final result
+                        } else {
+                            // Handle failure case - maybe highlight the status text red
+                            statusTextP.style.color = 'red';
+                            analyzeButton.disabled = false; // Re-enable button on failure
+                        }
+                    }
+    
+                } catch (error) {
+                    console.error('Error checking status:', error);
+                    // Don't stop polling on network errors etc., just log
+                    // statusTextP.textContent = `Error checking status: ${error.message}. Retrying...`;
+                }
+            }
+    
+            // --- Function to start polling ---
+            function startPolling(jobId) {
+                // Clear any existing interval
+                if (pollingIntervalId) {
+                    clearInterval(pollingIntervalId);
+                }
+                console.log(`Starting polling for job ${jobId}`);
+                statusTextP.style.color = 'black'; // Reset color on new job start
+                // Check status immediately, then every 3 seconds (3000ms)
+                checkStatus(jobId);
+                pollingIntervalId = setInterval(() => checkStatus(jobId), 3000);
+            }
+    
+            // --- Function to call the /start_job endpoint ---
+            async function startAnalysis() {
+                const queryValue = queryInput.value.trim();
+                if (!queryValue) {
+                    alert('Please enter a proposal query or ID.');
+                    return;
+                }
+    
+                // Clear previous outputs and hide sections
+                currentJobId = null;
+                if (pollingIntervalId) { // Stop previous polling if any
+                    clearInterval(pollingIntervalId);
+                    pollingIntervalId = null;
+                }
+                purchaseDetailsPre.textContent = '';
+                purchaseInfoDiv.style.display = 'none';
+                statusTextP.textContent = '';
+                jobStatusDiv.style.display = 'none';
+                 statusTextP.style.color = 'black'; // Reset color
+                resultTextPre.textContent = '';
+                jobResultDiv.style.display = 'none';
+    
+                // Show initial status & disable button
+                statusTextP.textContent = 'Starting job...';
+                jobStatusDiv.style.display = 'block';
+                analyzeButton.disabled = true;
+    
+                try {
+                    const response = await fetch('/start_job', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ proposal_query: queryValue })
+                    });
+    
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        throw new Error(`HTTP error ${response.status}: ${errorData}`);
+                    }
+    
+                    const data = await response.json();
+    
+                    if (data.status === 'success' && data.job_id) {
+                        currentJobId = data.job_id;
+    
+                        const details = `Job ID: ${data.job_id}\n` + /* ... (rest of details formatting) ... */
+                                        `------------------------------------\n` +
+                                        `blockchainIdentifier: ${data.blockchainIdentifier}\n` +
+                                        `agentIdentifier: ${data.agentIdentifier}\n` +
+                                        `sellerVkey: ${data.sellerVkey}\n` +
+                                        `identifierFromPurchaser: ${data.identifierFromPurchaser}\n` +
+                                        `input_hash: ${data.input_hash}\n` +
+                                        `amounts: ${JSON.stringify(data.amounts, null, 2)}\n` +
+                                        `submitResultTime (ms): ${data.submitResultTime}\n` +
+                                        `unlockTime (ms): ${data.unlockTime}\n` +
+                                        `externalDisputeUnlockTime (ms): ${data.externalDisputeUnlockTime}`;
+    
+                        purchaseDetailsPre.textContent = details;
+                        purchaseInfoDiv.style.display = 'block';
+    
+                        statusTextP.textContent = `Job ${currentJobId} created. Waiting for purchase simulation... (Polling started)`;
+    
+                        // *** Start polling the status endpoint ***
+                        startPolling(currentJobId);
+    
+                    } else {
+                        throw new Error(data.message || 'Failed to start job. Invalid response from server.');
+                    }
+    
+                } catch (error) {
+                    console.error('Error starting analysis:', error);
+                    statusTextP.textContent = `Error: ${error.message}`;
+                    analyzeButton.disabled = false; // Re-enable button on startup error
+                }
+                // Note: Button remains disabled after successful start until job completes/fails
+            }
+    
+            // Attach the function to the button click event
+            analyzeButton.addEventListener('click', startAnalysis);
+    
+        </script>    
+</body>
+</html>

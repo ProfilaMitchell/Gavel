@@ -1,0 +1,22 @@
+{
+  "data": {
+    "id": 3,
+    "attributes": {
+      "proposal_id": "3",
+      "prop_rev_active": true,
+      "prop_abstract": "Participation in Cardano Governance as a DRep is voluntary. By accepting delegated responsibility, the representative assumes an obligation of self-discipline above and beyond the requirements of laws and regulations. Foundational professional and ethical standards guide the fiduciary responsibilities for Cardano DRep to act in the best interests of its client. Not all voters are considered fiduciaries, those who take on roles of representing collective delegation as DRrep, or similar positions involving financial oversight or management of assets on behalf of the client are held to the Cardano Fiduciary Standard.\nBasic framework will be as follows:\n1. Duty of Loyalty\n2. Duty of Care\n3. Duty of Good Faith\n4. Duty of Full Disclosure\n5. Duty of Confidentiality\n6. Duty to Act Within Scope\n7. Fee Arrangements \n\nFull text of the Cardano Fiduciary Standard will be made available for public comment once it is in a final draft form.",
+      "prop_motivation": "Adopting such a standard will eliminate the need for repeated constitutional amendments to protect the treasury and infrastructure, and set the standard for what an acceptable proposal and voting action is for a Cardano DRep. Any actions not adhering to the interest of the client (cardano users as a class) would be prohibited under the standards.  ",
+      "prop_rationale": "The adoption of principles of the code of professional conduct in the Cardano Fiduciary Standard express the profession\u2019s recognition of its responsibilities to the public, to clients, and to colleagues. They guide representatives in the performance of their professional responsibilities and express the basic tenets of ethical and professional conduct. The Cardano Fiduciary Standard calls for an unswerving commitment to honorable behavior, even at the sacrifice of personal advantage.\nRepresentatives have a continuing responsibility to cooperate with each other to improve the art of governance, maintain client confidence while carrying out the special responsibilities for self-governance.\n",
+      "gov_action_type_id": "1",
+      "prop_name": "Cardano Fiduciary Standard",
+      "is_draft": false,
+      "user_id": "39",
+      "prop_submitted": false,
+      "prop_submission_tx_hash": null,
+      "prop_submission_date": null,
+      "createdAt": "2024-09-06T11:23:07.845Z",
+      "updatedAt": "2024-09-06T11:23:07.845Z"
+    }
+  },
+  "meta": {}
+}

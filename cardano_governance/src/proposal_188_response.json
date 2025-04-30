@@ -1,0 +1,65 @@
+{
+  "data": {
+    "id": 188,
+    "attributes": {
+      "prop_likes": 16,
+      "prop_dislikes": 2,
+      "prop_comments_number": 4,
+      "user_id": "356",
+      "createdAt": "2024-12-23T17:28:53.805Z",
+      "updatedAt": "2025-04-28T10:14:29.362Z",
+      "content": {
+        "id": 289,
+        "attributes": {
+          "proposal_id": "188",
+          "prop_rev_active": true,
+          "prop_abstract": "This proposal is not up to date and will be done in a separate budget info action and must not be included or considered in any Intersect budget.\n\nTo see the up to date proposal see here: https://hackmd.io/@PRAGMA-org/amaru-proposal and will be submitted on chain\nAmaru is an open-source project that aims to build a new fully interoperable block-producing node for improving the overall accessiblity and robustness of the Cardano network without compromising on its satefy and security. Amaru provides another perspective and solution for stake pool operators and developers alike, focusing on modularity and easy-of-use. The project is implemented mainly in Rust and aims to attract new contributors to the core maintenance of the ecosystem.\n\nThis proposal is designed to breakdown the objectives, scopes, timelines and costs pertaining to Amaru. It delivers the full vision behind the project and open the discussion regarding a Cardano treasury withdrawal to sustain its development.\n\nFor better viewing experience please use this link: https://hackmd.io/@PRAGMA-org/amaru-proposal\n\nDisclaimer: The following document is a DRAFT proposal for the Amaru project. It is a collective document that describes the vision and the needs of multiple entities/actors involved in the development of Amaru.\n\nThis proposal will evolve in January 2025 following changes of scopes and resources allocated to the project\n\nIt is meant as a starting point for discussing Cardano treasury withdrawals in alignment with the incoming constitution.\n\nAs such, we invite anyone interested to comment on the following document, and share feedback with us.\n\nResult of the estimation phase of our proposal: 6 FTEs + $60k (see https://hackmd.io/@PRAGMA-org/amaru-proposal for details)\n\nGiven our assumptions the valuation of this proposal based on a 200k$ base for an FTE, the estimation comes down to: 6 * 200k$ + 60 k$ = 1260k$\n\nGiven our assumption regarding our optimism bias (add 25% of contingency), the proposal submitted will be targetting: $1.578M as a result of the scopes covered in Amaru and ask for the equivalent in ADA at the time the treasury withdrawal is emitted.",
+          "prop_motivation": "Along the lines of the project, it aims to bring diversity and operational resilience to the Cardano network, improve the overall performance with no compromise regarding security and focus on operator experience by having a modular design.",
+          "prop_rationale": "For better viewing experience please use this link: https://hackmd.io/@PRAGMA-org/amaru-proposal\n\nThe result of applying every steps of the framework described and the mindset used on the project gave us the following:\n\nAchieved demos for Amaru so far are:\n- Chain-synchronization proof-of-concept in Dolos (30th May 2024)\n- First Amaru node experiment : Simple peer-to-peer network with a single block producer (22nd October 2024)\n- Amaru (20th Dec) - Ledger progress demo (20th December)\n\nThe demos that are currently forecasted are:\n- Amaru Q1 25 (Private testnet launch, Mempool simple implementation,  Networking peer discovery)\n- Amaru Q2 25 (Ledger full validation, Consensus tested, UTxO RPC implemented, Networking Inbound & Outbound)\n- Amaru Q3 25 (Ledger governance rules, Consensus full validation & conformance tested, Sundae Sync implemented, Complex mempool)\n- Amaru Q4 25 (Consensus block production, Mempool operator environment, Testnet tuning down, Ledger with Amaru as a trusted peer)",
+          "gov_action_type_id": "1",
+          "prop_name": "Amaru treasury withdrawal budget draft proposal (v0)",
+          "is_draft": false,
+          "user_id": "356",
+          "prop_submitted": false,
+          "prop_submission_tx_hash": null,
+          "prop_submission_date": null,
+          "createdAt": "2025-04-26T02:15:43.082Z",
+          "updatedAt": "2025-04-26T02:15:43.082Z",
+          "proposal_links": [
+            {
+              "id": 380,
+              "prop_link": "https://hackmd.io/@PRAGMA-org/amaru-proposal",
+              "prop_link_text": "Complete proposal draft"
+            },
+            {
+              "id": 381,
+              "prop_link": "https://github.com/pragma-org/amaru",
+              "prop_link_text": "Amaru project repo"
+            }
+          ],
+          "proposal_withdrawals": [
+            {
+              "id": 259,
+              "prop_receiving_address": null,
+              "prop_amount": null
+            }
+          ],
+          "proposal_constitution_content": {
+            "data": null
+          },
+          "gov_action_type": {
+            "id": 1,
+            "attributes": {
+              "gov_action_type_name": "Info Action",
+              "createdAt": "2024-08-27T11:59:38.507Z",
+              "updatedAt": "2024-08-27T11:59:39.600Z",
+              "publishedAt": "2025-02-21T11:56:55.808Z"
+            }
+          }
+        }
+      },
+      "user_govtool_username": "damienczapla"
+    }
+  },
+  "meta": {}
+}

@@ -1,0 +1,385 @@
+[
+  {
+    "id": "249",
+    "url": "https://be.pdf.gov.tools/api/proposals/249",
+    "user_id": "626",
+    "likes": 7,
+    "dislikes": 1,
+    "poll_active": false,
+    "comment_count": 19,
+    "created_at": "2025-04-14T22:52:21.020Z",
+    "updated_at": "2025-04-27T15:35:56.402Z",
+    "title": "Support Efforts for Cardano to expand in French Speaking Countries.",
+    "abstract": "Cardano needs to expand in French-speaking countries, especially in Africa, where innovative ideas and technologies lag far behind those in English-speaking countries. The Inkuba Blockchain Center is a pilot project that may resolve the issue.",
+    "motivation": "There are millions of people in French-speaking countries and regions throughout the world. Colonization played a role in dispersing the French language. Unfortunately, these populations remain behind in new innovative technologies such as blockchain.\nWe hear a lot about the British Empire but tend to forget that France also had an impressive colonial empire. It centered more around Africa, some parts of South America, and various Oceanic islands. Still, it was large enough that, for a time, French was the language of choice when meeting someone from another nationality.\n\nFrance occupied northern West Africa, reaching fairly deep into Central Africa. It all began with trading posts along the shore of Senegal, starting in 1624. \nHere is a list of West African countries where French is still an official language or is at least spoken by a large segment of the population:\n\nB\u00e9nin, Burkina-Faso, Cameroon, Democratic Republic of Congo, Ivory Coast, Gabon, Guinea, Nigeria, Senegal, Togo, Republic of Central Africa, Equatorial Guinea, and Chad.\n",
+    "rationale": "Once established in Burkina Faso, the Inkuba Blockchain Center may expand to other countries. Support and help this pilot project take place via the proposed special and unique project funding.\nBy starting in Burkina Faso, the Inkuba Blockchain Center is trying to turn challenges into opportunities by creating a permanent hub where developers can receive continued education, mentorship, and resources to build blockchain solutions that address local needs while contributing to the global Cardano ecosystem. ",
+    "category": "1",
+    "status": "Active",
+    "description": "Cardano needs to expand in French-speaking countries, especially in Africa, where innovative ideas and technologies lag far behind those in English-speaking countries. The Inkuba Blockchain Center is a pilot project that may resolve the issue.\n\nThere are millions of people in French-speaking countries and regions throughout the world. Colonization played a role in dispersing the French language. Unfortunately, these populations remain behind in new innovative technologies such as blockchain.\nWe hear a lot about the British Empire but tend to forget that France also had an impressive colonial empire. It centered more around Africa, some parts of South America, and various Oceanic islands. Still, it was large enough that, for a time, French was the language of choice when meeting someone from another nationality.\n\nFrance occupied northern West Africa, reaching fairly deep into Central Africa. It all began with trading posts along the shore of Senegal, starting in 1624. \nHere is a list of West African countries where French is still an official language or is at least spoken by a large segment of the population:\n\nB\u00e9nin, Burkina-Faso, Cameroon, Democratic Republic of Congo, Ivory Coast, Gabon, Guinea, Nigeria, Senegal, Togo, Republic of Central Africa, Equatorial Guinea, and Chad.\n",
+    "date_created": "2025-04-14T22:52:21.020Z",
+    "date_updated": "2025-04-27T15:35:56.402Z",
+    "comments": [
+      {
+        "id": 1942,
+        "author": "1395",
+        "text": "why are we targeting poor countries? get out of here",
+        "date": "2025-04-26T22:30:51.648Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 1671,
+        "author": "52",
+        "text": "This is a need, but without concept or support for ROI. I can expect little in terms of chain use, or fees as a direct consequence of this spending, and thus can not support it.",
+        "date": "2025-04-25T06:35:31.050Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 1616,
+        "author": "626",
+        "text": "Is there another advanced country (speaking French) around the wolrd, in Cardano ecosystem, such as Asia, Europe or America? Collaboration with African Countries would be crucial.",
+        "date": "2025-04-24T20:22:20.115Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 1615,
+        "author": "626",
+        "text": "Thank you",
+        "date": "2025-04-24T20:16:27.046Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 1607,
+        "author": "626",
+        "text": "I believe there are enough proposals for this goal; please check them out when you have time to see what you can do to support the projects. The results were overwhelmingly telling.",
+        "date": "2025-04-24T20:12:49.828Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 1444,
+        "author": "1786",
+        "text": "While I agree with the idea and fully support expanding and education especially in Africa where I believe we will find the true use cases that push crypto as a whole to the global stage. It is hard to see what the ask is here. It would be great if there were more specifics.",
+        "date": "2025-04-23T22:52:50.856Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 1100,
+        "author": "141",
+        "text": "Any action that helps to faciliate resilience and interoperability is a positive one. Would probably make sense to generalize proposal to include other widely spoken languages, and create a department, per each significant language branch. Designate at least one native speaker to run each department.",
+        "date": "2025-04-19T15:13:12.759Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 983,
+        "author": "1650",
+        "text": "This is a visionary step toward decentralizing leadership and truly empowering the global Cardano community. A region-based governance model could unlock voices that often go unheard in centralized forums. I\u2019d be excited to see how this integrates with existing governance layers like CIP and DReps. You have my support \u2014 inclusive leadership is the future!",
+        "date": "2025-04-17T16:01:42.280Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 856,
+        "author": "1622",
+        "text": "i think is a brilliant project for cardano ecosystem. i think in asia can help grow cardano ecosystem in education, community building, partnership and marketing with media channel and influencers can spread awareness faster. cardano ecosystem can moving foward.",
+        "date": "2025-04-16T14:02:31.196Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 827,
+        "author": "1601",
+        "text": "Imagine the cross cultural collaborations and business opportunities this could unlock for the entire Cardano ecosystem",
+        "date": "2025-04-16T04:04:06.293Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      },
+      {
+        "id": 825,
+        "author": "1597",
+        "text": "This is a great move for growing the Cardano ecosystem. Africa is one of the biggest regions in the world, so I really believe it\u2019s a great opportunity for Cardano. it can start by building a solid local Cardano community\u2014one that\u2019s connected and strong",
+        "date": "2025-04-16T03:41:37.248Z",
+        "is_drep": false,
+        "drep_address": null,
+        "likes": 0
+      }
+    ],
+    "poll_results": {
+      "question": "Do you support this proposal?",
+      "total_votes": 11,
+      "yes_percentage": 72,
+      "no_percentage": 27,
+      "is_active": false,
+      "start_date": "2025-04-14T23:01:52.602Z"
+    },
+    "processed_comments": {
+      "all_comments": [
+        {
+          "id": 1942,
+          "author": "1395",
+          "text": "why are we targeting poor countries? get out of here",
+          "date": "2025-04-26T22:30:51.648Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 1671,
+          "author": "52",
+          "text": "This is a need, but without concept or support for ROI. I can expect little in terms of chain use, or fees as a direct consequence of this spending, and thus can not support it.",
+          "date": "2025-04-25T06:35:31.050Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 1616,
+          "author": "626",
+          "text": "Is there another advanced country (speaking French) around the wolrd, in Cardano ecosystem, such as Asia, Europe or America? Collaboration with African Countries would be crucial.",
+          "date": "2025-04-24T20:22:20.115Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": true,
+          "is_thank_you": false
+        },
+        {
+          "id": 1615,
+          "author": "626",
+          "text": "Thank you",
+          "date": "2025-04-24T20:16:27.046Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": true,
+          "is_thank_you": false
+        },
+        {
+          "id": 1607,
+          "author": "626",
+          "text": "I believe there are enough proposals for this goal; please check them out when you have time to see what you can do to support the projects. The results were overwhelmingly telling.",
+          "date": "2025-04-24T20:12:49.828Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": true,
+          "is_thank_you": false
+        },
+        {
+          "id": 1444,
+          "author": "1786",
+          "text": "While I agree with the idea and fully support expanding and education especially in Africa where I believe we will find the true use cases that push crypto as a whole to the global stage. It is hard to see what the ask is here. It would be great if there were more specifics.",
+          "date": "2025-04-23T22:52:50.856Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 1100,
+          "author": "141",
+          "text": "Any action that helps to faciliate resilience and interoperability is a positive one. Would probably make sense to generalize proposal to include other widely spoken languages, and create a department, per each significant language branch. Designate at least one native speaker to run each department.",
+          "date": "2025-04-19T15:13:12.759Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 983,
+          "author": "1650",
+          "text": "This is a visionary step toward decentralizing leadership and truly empowering the global Cardano community. A region-based governance model could unlock voices that often go unheard in centralized forums. I\u2019d be excited to see how this integrates with existing governance layers like CIP and DReps. You have my support \u2014 inclusive leadership is the future!",
+          "date": "2025-04-17T16:01:42.280Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 856,
+          "author": "1622",
+          "text": "i think is a brilliant project for cardano ecosystem. i think in asia can help grow cardano ecosystem in education, community building, partnership and marketing with media channel and influencers can spread awareness faster. cardano ecosystem can moving foward.",
+          "date": "2025-04-16T14:02:31.196Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 827,
+          "author": "1601",
+          "text": "Imagine the cross cultural collaborations and business opportunities this could unlock for the entire Cardano ecosystem",
+          "date": "2025-04-16T04:04:06.293Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 825,
+          "author": "1597",
+          "text": "This is a great move for growing the Cardano ecosystem. Africa is one of the biggest regions in the world, so I really believe it\u2019s a great opportunity for Cardano. it can start by building a solid local Cardano community\u2014one that\u2019s connected and strong",
+          "date": "2025-04-16T03:41:37.248Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        }
+      ],
+      "author_comments": [
+        {
+          "id": 1616,
+          "author": "626",
+          "text": "Is there another advanced country (speaking French) around the wolrd, in Cardano ecosystem, such as Asia, Europe or America? Collaboration with African Countries would be crucial.",
+          "date": "2025-04-24T20:22:20.115Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": true,
+          "is_thank_you": false
+        },
+        {
+          "id": 1615,
+          "author": "626",
+          "text": "Thank you",
+          "date": "2025-04-24T20:16:27.046Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": true,
+          "is_thank_you": false
+        },
+        {
+          "id": 1607,
+          "author": "626",
+          "text": "I believe there are enough proposals for this goal; please check them out when you have time to see what you can do to support the projects. The results were overwhelmingly telling.",
+          "date": "2025-04-24T20:12:49.828Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": true,
+          "is_thank_you": false
+        }
+      ],
+      "community_comments": [
+        {
+          "id": 1942,
+          "author": "1395",
+          "text": "why are we targeting poor countries? get out of here",
+          "date": "2025-04-26T22:30:51.648Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 1671,
+          "author": "52",
+          "text": "This is a need, but without concept or support for ROI. I can expect little in terms of chain use, or fees as a direct consequence of this spending, and thus can not support it.",
+          "date": "2025-04-25T06:35:31.050Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 1444,
+          "author": "1786",
+          "text": "While I agree with the idea and fully support expanding and education especially in Africa where I believe we will find the true use cases that push crypto as a whole to the global stage. It is hard to see what the ask is here. It would be great if there were more specifics.",
+          "date": "2025-04-23T22:52:50.856Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 1100,
+          "author": "141",
+          "text": "Any action that helps to faciliate resilience and interoperability is a positive one. Would probably make sense to generalize proposal to include other widely spoken languages, and create a department, per each significant language branch. Designate at least one native speaker to run each department.",
+          "date": "2025-04-19T15:13:12.759Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 983,
+          "author": "1650",
+          "text": "This is a visionary step toward decentralizing leadership and truly empowering the global Cardano community. A region-based governance model could unlock voices that often go unheard in centralized forums. I\u2019d be excited to see how this integrates with existing governance layers like CIP and DReps. You have my support \u2014 inclusive leadership is the future!",
+          "date": "2025-04-17T16:01:42.280Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 856,
+          "author": "1622",
+          "text": "i think is a brilliant project for cardano ecosystem. i think in asia can help grow cardano ecosystem in education, community building, partnership and marketing with media channel and influencers can spread awareness faster. cardano ecosystem can moving foward.",
+          "date": "2025-04-16T14:02:31.196Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 827,
+          "author": "1601",
+          "text": "Imagine the cross cultural collaborations and business opportunities this could unlock for the entire Cardano ecosystem",
+          "date": "2025-04-16T04:04:06.293Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        },
+        {
+          "id": 825,
+          "author": "1597",
+          "text": "This is a great move for growing the Cardano ecosystem. Africa is one of the biggest regions in the world, so I really believe it\u2019s a great opportunity for Cardano. it can start by building a solid local Cardano community\u2014one that\u2019s connected and strong",
+          "date": "2025-04-16T03:41:37.248Z",
+          "is_drep": false,
+          "drep_address": null,
+          "likes": 0,
+          "is_author": false,
+          "is_thank_you": false
+        }
+      ],
+      "drep_comments": [],
+      "filtered_out": 0,
+      "duplicate_count": 0,
+      "thank_you_count": 0
+    }
+  }
+]

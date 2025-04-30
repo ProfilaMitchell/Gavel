@@ -1,0 +1,28 @@
+# Ignore Python virtual environment
+venv/
+.venv/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore sensitive environment files
+.env*
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary data files generated during testing
+*.json
+# Add other files/dirs to ignore if needed

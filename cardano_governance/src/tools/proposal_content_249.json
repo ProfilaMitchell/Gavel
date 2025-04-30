@@ -1,0 +1,22 @@
+{
+  "data": {
+    "id": 249,
+    "attributes": {
+      "proposal_id": "235",
+      "prop_rev_active": true,
+      "prop_abstract": "Intersect is recalibrating Cardano's budget process. To further align to DRep's needs, Intersect would like to understand more details about what will work best for 2025. If you haven't yet, please read about the recalibration here.  The activities required to arrive at a 2025 budget will include reviewing proposals to receive treasury funding, determining the budget amount, and selecting providers to deliver the work.",
+      "prop_motivation": "Align the 2025 budget process with DRep needs.",
+      "prop_rationale": "This will not be posted as an on-chain info action. This form is being posted on GovTool Proposals to improve its reach.  This form will close on March 28th, 2025.",
+      "gov_action_type_id": "1",
+      "prop_name": "Budget Process Q's for DReps",
+      "is_draft": true,
+      "user_id": "1240",
+      "prop_submitted": false,
+      "prop_submission_tx_hash": null,
+      "prop_submission_date": null,
+      "createdAt": "2025-03-19T20:26:28.991Z",
+      "updatedAt": "2025-03-19T20:26:28.991Z"
+    }
+  },
+  "meta": {}
+}

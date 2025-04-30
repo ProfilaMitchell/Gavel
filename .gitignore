@@ -1,0 +1,62 @@
+.env
+.DS_Store
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Generated files
+proposals.json
+*.json
+
+# Common large files
+*.csv
+*.xls
+*.xlsx
+*.db
+*.sqlite
+*.sqlite3
+*.hdf5
+*.h5
+*.parquet
+*.pkl
+*.pickle
+*.joblib
+*.feather
+*.pdf
+*.doc
+*.docx
+*.ppt
+*.pptx
+*.zip
+*.tar
+*.tar.gz
+*.gz
+*.rar
+*.7z
+*.mp4
+*.mov
+*.avi
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.svg

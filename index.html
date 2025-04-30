@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gavel Agent</title>
+    <style>
+        /* Basic styling for layout */
+        body {
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto; /* Center content */
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .input-area {
+            display: flex; /* Arrange input and button side-by-side */
+            gap: 10px; /* Add space between input and button */
+            margin-bottom: 20px;
+        }
+        #proposalQueryInput {
+            flex-grow: 1; /* Allow input to take available space */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #analyzeButton {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        #analyzeButton:hover {
+            background-color: #0056b3;
+        }
+        #gavelImage {
+             display: block; /* Make image a block element */
+             margin: 0 auto 20px auto; /* Center image and add bottom margin */
+             max-width: 150px; /* Limit image size */
+             height: auto; /* Maintain aspect ratio */
+        }
+        /* Style for output areas */
+        .output-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed #eee;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            white-space: pre-wrap; /* Preserve formatting */
+            word-wrap: break-word; /* Wrap long lines */
+            font-family: monospace; /* Good for displaying code-like data */
+        }
+         h2 {
+             margin-top: 30px;
+             border-bottom: 1px solid #eee;
+             padding-bottom: 5px;
+         }
+    </style>
+</head>
+<body>
+    <img id="gavelImage" src="placeholder.png" alt="Gavel Image Placeholder">
+
+    <h1>Cardano Governance Agent (Gavel)</h1>
+
+    <div class="input-area">
+        <input type="text" id="proposalQueryInput" placeholder="Enter Proposal ID or 'latest'">
+        <button id="analyzeButton">Analyze Proposal</button>
+    </div>
+
+    <div id="purchaseInfo" class="output-section" style="display: none;">
+        <h2>Action Required: Simulate Purchase</h2>
+        <p>Please use the details below to call the Masumi `POST /purchase` endpoint:</p>
+        <pre id="purchaseDetails"></pre> </div>
+
+    <div id="jobStatus" class="output-section" style="display: none;">
+         <h2>Job Status</h2>
+         <p id="statusText"></p>
+    </div>
+
+    <div id="jobResult" class="output-section" style="display: none;">
+        <h2>Analysis Result</h2>
+        <pre id="resultText"></pre> </div>
+
+    <script>
+        // Get references to HTML elements
+        const queryInput = document.getElementById('proposalQueryInput');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const purchaseInfoDiv = document.getElementById('purchaseInfo');
+        const purchaseDetailsPre = document.getElementById('purchaseDetails');
+        const jobStatusDiv = document.getElementById('jobStatus');
+        const statusTextP = document.getElementById('statusText');
+        const jobResultDiv = document.getElementById('jobResult');
+        const resultTextPre = document.getElementById('resultText');
+
+        // Variable to store the current job ID
+        let currentJobId = null;
+
+        // Function to call the /start_job endpoint
+        async function startAnalysis() {
+            const queryValue = queryInput.value.trim();
+            if (!queryValue) {
+                alert('Please enter a proposal query or ID.');
+                return;
+            }
+
+            // Clear previous outputs and hide sections
+            currentJobId = null;
+            purchaseDetailsPre.textContent = '';
+            purchaseInfoDiv.style.display = 'none';
+            statusTextP.textContent = '';
+            jobStatusDiv.style.display = 'none';
+            resultTextPre.textContent = '';
+            jobResultDiv.style.display = 'none';
+
+            // Show initial status
+            statusTextP.textContent = 'Starting job...';
+            jobStatusDiv.style.display = 'block';
+            analyzeButton.disabled = true; // Disable button during request
+
+            try {
+                const response = await fetch('/start_job', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ proposal_query: queryValue })
+                });
+
+                if (!response.ok) {
+                    // Handle HTTP errors (like 500, 404 etc.)
+                    const errorData = await response.text(); // Get error text
+                    throw new Error(`HTTP error ${response.status}: ${errorData}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.job_id) {
+                    currentJobId = data.job_id; // Store the job ID
+
+                    // Format the purchase details nicely
+                    const details = `Job ID: ${data.job_id}\n` +
+                                    `------------------------------------\n` +
+                                    `blockchainIdentifier: ${data.blockchainIdentifier}\n` +
+                                    `agentIdentifier: ${data.agentIdentifier}\n` +
+                                    `sellerVkey: ${data.sellerVkey}\n` +
+                                    `identifierFromPurchaser: ${data.identifierFromPurchaser}\n` +
+                                    `input_hash: ${data.input_hash}\n` +
+                                    `amounts: ${JSON.stringify(data.amounts, null, 2)}\n` + // Pretty print amounts
+                                    `submitResultTime (ms): ${data.submitResultTime}\n` +
+                                    `unlockTime (ms): ${data.unlockTime}\n` +
+                                    `externalDisputeUnlockTime (ms): ${data.externalDisputeUnlockTime}`;
+
+                    // Display purchase instructions
+                    purchaseDetailsPre.textContent = details;
+                    purchaseInfoDiv.style.display = 'block';
+
+                    // Update status message
+                    statusTextP.textContent = `Job ${currentJobId} created. Waiting for purchase simulation...`;
+
+                    // TODO: Start polling for status/result (we'll add this next)
+
+                } else {
+                    // Handle cases where API returns success=false or missing job_id
+                    throw new Error(data.message || 'Failed to start job. Invalid response from server.');
+                }
+
+            } catch (error) {
+                console.error('Error starting analysis:', error);
+                statusTextP.textContent = `Error: ${error.message}`;
+                // Optionally re-enable button on error
+                // analyzeButton.disabled = false;
+            } finally {
+                 // Re-enable button unless we are polling
+                 // For now, let's re-enable it. We'll adjust when polling is added.
+                 analyzeButton.disabled = false;
+            }
+        }
+
+        // Attach the function to the button click event
+        analyzeButton.addEventListener('click', startAnalysis);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+scrape_proposals_task:
+  description: >
+    Use the scrape_governance_proposals tool to collect all governance proposals from gov.tools and save the structured data.
+  expected_output: A confirmation message stating that proposals have been scraped and saved successfully.
+  agent: proposal_scraper
+
+analyze_sentiment_task:
+  description: >
+    Iterate through the proposals collected in the previous step. 
+    For each proposal, use the analyze_sentiment_for_proposal tool 
+    with its ID, title, and description to analyze and save sentiment from Bluesky and gov.tools. 
+    Also use the get_user_sentiment tool for each proposal ID.
+  expected_output: A confirmation message summarizing the sentiment analysis performed for the proposals.
+  agent: sentiment_analyzer
+
+aggregate_insights_task:
+  description: >
+    Use the aggregate_proposal_data tool to combine the stored proposal data with the stored sentiment analysis results into comprehensive governance insights.
+  expected_output: A confirmation message that the data aggregation is complete, possibly summarizing the number of proposals aggregated.
+  agent: data_aggregator
