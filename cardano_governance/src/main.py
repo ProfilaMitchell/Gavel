@@ -34,6 +34,10 @@ except ImportError as e:
          # Set to None so the server can potentially start but background tasks will fail informatively
          CardanoGovernanceCrew = None
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+
 
 # --- Load Environment Variables ---
 # Load .env file from the current directory (src)
@@ -63,11 +67,18 @@ app = FastAPI(
 
 # --- Mount static files directory ---
 # Assumes 'static' directory is in the same place as main.py
-app.mount("/static", StaticFiles(directory="static"), name="static")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    logger.info(f"Mounted static directory: {STATIC_DIR}")
+else:
+    logger.error(f"Static directory not found at: {STATIC_DIR}. Static files will not be served.")
 
 # --- Setup Templates ---
 # Assumes 'templates' directory is in the same place as main.py
-templates = Jinja2Templates(directory="templates")
+#templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
+logger.info(f"Configured template directory: {TEMPLATE_DIR}")
 
 # --- REMOVE In-Memory Job Store ---
 # jobs = {} # Removed
