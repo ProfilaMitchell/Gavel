@@ -485,6 +485,7 @@ async def startup_event():
     REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
     REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
     REDIS_DB = int(os.getenv("REDIS_DB", 0))
+    REDIS_USE_SSL = os.getenv("REDIS_USE_SSL", "false").lower() == "true"
 
     app.state.redis_pool = None
     app.state.redis_conn = None
@@ -492,13 +493,26 @@ async def startup_event():
     temp_conn = None
 
     try:
-        temp_pool = redis.ConnectionPool(
-            host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD,
-            db=REDIS_DB, decode_responses=True
-        )
-        ssl=True,
-        ssl_cert_reqs='required'
+        # Create connection pool with correct SSL configuration
+        connection_args = {
+            "host": REDIS_HOST,
+            "port": REDIS_PORT,
+            "password": REDIS_PASSWORD,
+            "db": REDIS_DB,
+            "decode_responses": True
+        }
+        
+        # Add SSL configuration if enabled
+        if REDIS_USE_SSL:
+            connection_args.update({
+                "ssl": True,
+                "ssl_cert_reqs": None  # Less strict for Digital Ocean managed Redis
+            })
+            
+        temp_pool = redis.ConnectionPool(**connection_args)
         temp_conn = redis.Redis(connection_pool=temp_pool)
+        
+        # Try to ping Redis to verify connection
         temp_conn.ping()
         logger.info(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
         app.state.redis_pool = temp_pool
