@@ -271,6 +271,9 @@ async def start_job(data: StartJobRequest, request: Request):
 
     if not config: # Check if Masumi config is available
         raise HTTPException(status_code=503, detail="Masumi Payment Service not configured")
+        
+    # Log the raw payment service URL for debugging
+    logger.info(f"Raw PAYMENT_SERVICE_URL from environment: {os.getenv('PAYMENT_SERVICE_URL', 'Not set')}")
 
     try:
         job_id = str(uuid.uuid4())
@@ -306,28 +309,72 @@ async def start_job(data: StartJobRequest, request: Request):
         dispute_time_iso = dispute_time_dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         logger.info(f"Calculated ISO timestamps: submit={submit_time_iso}, unlock={unlock_time_iso}, dispute={dispute_time_iso}")
 
-        # --- Masumi API Call --- (Keep existing logic)
-        payment_service_url = f"{PAYMENT_SERVICE_URL.rstrip('/')}/v1/payment"
+        # --- Masumi API Call --- (CORRECTED URL CONSTRUCTION)
+        base_url = PAYMENT_SERVICE_URL.rstrip('/')
+        
+        # Check if the base URL already contains /api/v1
+        if '/api/v1' in base_url:
+            # URL already has /api/v1, just add /payment
+            payment_service_url = f"{base_url}/payment"
+        else:
+            # URL doesn't have /api/v1, add it before /payment
+            payment_service_url = f"{base_url}/api/v1/payment"
+        
+        # Log the constructed URL for debugging
+        logger.info(f"Constructed payment service URL: {payment_service_url}")
+        
         payload = {
-            "agentIdentifier": agent_identifier, "network": "Preprod",
-            "paymentType": "Web3CardanoV1", "identifierFromPurchaser": identifier_from_purchaser,
-            "inputHash": input_hash, "submitResultTime": submit_time_iso,
-            "unlockTime": unlock_time_iso, "externalDisputeUnlockTime": dispute_time_iso
+            "agentIdentifier": agent_identifier, 
+            "network": "Preprod",
+            "paymentType": "Web3CardanoV1", 
+            "identifierFromPurchaser": identifier_from_purchaser,
+            "inputHash": input_hash, 
+            "submitResultTime": submit_time_iso,
+            "unlockTime": unlock_time_iso, 
+            "externalDisputeUnlockTime": dispute_time_iso
         }
+        
+        # Log the full payload for debugging
+        logger.info(f"Payment service payload: {json.dumps(payload)}")
+        
         headers = {"Content-Type": "application/json", "token": PAYMENT_API_KEY}
         payment_id = None
         payment_data_response = None # Store response data for return
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(payment_service_url, headers=headers, json=payload)
-            if response.status_code != 200:
-                logger.error(f"Payment service error ({response.status_code}): {response.text}")
-                raise HTTPException(status_code=response.status_code, detail=f"Payment service error: {response.text}")
-            payment_data = response.json()
-            if "data" not in payment_data or "blockchainIdentifier" not in payment_data["data"]:
-                logger.error(f"Invalid payment service response: {payment_data}")
-                raise HTTPException(status_code=500, detail="Invalid payment service response")
-            payment_id = payment_data["data"]["blockchainIdentifier"]
-            payment_data_response = payment_data["data"] # Save for return
+
+        try:
+            # Use custom timeout and add verification=False for self-signed certs
+            PAYMENT_TIMEOUT = int(os.getenv("PAYMENT_TIMEOUT", "30"))
+            async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT, verify=False) as client:
+                response = await client.post(payment_service_url, headers=headers, json=payload)
+                
+                if response.status_code != 200:
+                    logger.error(f"Payment service error ({response.status_code}): {response.text}")
+                    raise HTTPException(status_code=response.status_code, 
+                                    detail=f"Payment service error: {response.text}")
+                
+                payment_data = response.json()
+                logger.info(f"Payment service response: {payment_data}")
+                
+                if "data" not in payment_data or "blockchainIdentifier" not in payment_data["data"]:
+                    logger.error(f"Invalid payment service response: {payment_data}")
+                    raise HTTPException(status_code=500, detail="Invalid payment service response")
+                
+                payment_id = payment_data["data"]["blockchainIdentifier"]
+                payment_data_response = payment_data["data"]
+                logger.info(f"Successfully obtained payment ID: {payment_id}")
+                
+        except httpx.ConnectError as e:
+            logger.error(f"Failed to connect to payment service: {str(e)}")
+            raise HTTPException(status_code=503, 
+                            detail=f"Cannot connect to payment service. Please try again later.")
+        except httpx.TimeoutException as e:
+            logger.error(f"Timeout connecting to payment service: {str(e)}")
+            raise HTTPException(status_code=504, 
+                            detail=f"Payment service timed out. Please try again later.")
+        except Exception as e:
+            logger.error(f"Payment service error: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, 
+                            detail=f"Error communicating with payment service: {str(e)}")
 
         # --- Store Initial Job Data in Redis ---
         initial_job_data = {
