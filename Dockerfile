@@ -24,8 +24,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Assuming your code (main.py, crew.py, templates/, static/, etc.) is inside a 'src' directory
 # If not, adjust the source path (e.g., COPY . . if main.py is in the root)
 COPY ./cardano_governance /app/cardano_governance
+
 # Also copy govtools_api.py if it's outside src but needed
 # COPY ./tools/govtools_api.py /app/tools/govtools_api.py # Example if tools is separate
+
+
+WORKDIR /app/cardano_governance/src
 
 # Make port 8000 available to the world outside this container
 # Digital Ocean App Platform typically expects port 8000 or 8080
@@ -35,4 +39,4 @@ EXPOSE 8000
 # Use uvicorn to run the FastAPI app located at src.main:app
 # --host 0.0.0.0 makes it accessible from outside the container
 # --port 8000 matches the EXPOSE directive
-CMD ["uvicorn", "cardano_governance.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
