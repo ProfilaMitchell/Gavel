@@ -1,4 +1,6 @@
 import httpx
+import asyncio
+import redis.exceptions
 import os
 import uuid
 import logging
@@ -481,66 +483,100 @@ async def input_schema():
 async def startup_event():
     logger.warning("!!! Running startup_event function...")
     logger.info("Application startup: Initializing Redis connection...")
-    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
-    REDIS_DB = int(os.getenv("REDIS_DB", 0))
-    REDIS_USE_SSL = os.getenv("REDIS_USE_SSL", "false").lower() == "true"
-
+    
+    # Get Redis configuration from environment or use provided connection string
+    REDIS_URL = os.getenv("REDIS_URL", "rediss://default:AVNS_nn1-vl6BUt-LMD6LcGY@gavelcluster-do-user-21771770-0.f.db.ondigitalocean.com:25061")
+    REDIS_MAX_RETRIES = int(os.getenv("REDIS_MAX_RETRIES", "3"))
+    REDIS_RETRY_DELAY = int(os.getenv("REDIS_RETRY_DELAY", "2"))
+    
+    # Log configuration (without showing full connection string)
+    masked_url = REDIS_URL.replace(REDIS_URL.split('@')[0], "rediss://***:***")
+    logger.info(f"Redis configuration: URL={masked_url}")
+                
     app.state.redis_pool = None
     app.state.redis_conn = None
-    temp_pool = None
-    temp_conn = None
-
-    try:
-        # Create connection pool with correct SSL configuration
-        connection_args = {
-            "host": REDIS_HOST,
-            "port": REDIS_PORT,
-            "password": REDIS_PASSWORD,
-            "db": REDIS_DB,
-            "decode_responses": True
-        }
+    
+    # Retry loop
+    for attempt in range(1, REDIS_MAX_RETRIES + 1):
+        logger.info(f"Redis connection attempt {attempt}/{REDIS_MAX_RETRIES}...")
+        temp_conn = None
         
-        # Add SSL configuration if enabled
-        if REDIS_USE_SSL:
-            connection_args.update({
-                "ssl": True,
-                "ssl_cert_reqs": None  # Less strict for Digital Ocean managed Redis
-            })
+        try:
+            # Create connection using the URL with SSL verification disabled
+            # This is necessary for Digital Ocean managed Redis
+            connection_args = {
+                "url": REDIS_URL,
+                "decode_responses": True,
+                "socket_timeout": 10.0,
+                "socket_connect_timeout": 10.0,
+                "retry_on_timeout": True,
+                "ssl_cert_reqs": None  # Important: Disable certificate verification for Digital Ocean
+            }
             
-        temp_pool = redis.ConnectionPool(**connection_args)
-        temp_conn = redis.Redis(connection_pool=temp_pool)
+            logger.info(f"Connecting to Redis with masked URL: {masked_url}")
+            
+            # Create Redis connection
+            temp_conn = redis.from_url(**connection_args)
+            
+            # Test connection with ping
+            temp_conn.ping()
+            logger.info("Redis connection test succeeded!")
+            
+            # Store the connection in app state
+            app.state.redis_conn = temp_conn
+            logger.warning("!!! Redis connection successful and assigned to app.state.")
+            break  # Success, exit retry loop
+            
+        except redis.exceptions.AuthenticationError as e:
+            logger.error(f"Redis authentication failed: {e}")
+            logger.warning("!!! Redis connection FAILED (AuthenticationError).")
+            # Authentication errors won't be resolved by retrying
+            break
+            
+        except redis.exceptions.ConnectionError as e:
+            logger.error(f"Failed to connect to Redis (attempt {attempt}/{REDIS_MAX_RETRIES}): {e}")
+            if attempt == REDIS_MAX_RETRIES:
+                logger.warning("!!! Redis connection FAILED after all retries (ConnectionError).")
+            else:
+                logger.info(f"Retrying in {REDIS_RETRY_DELAY} seconds...")
+                await asyncio.sleep(REDIS_RETRY_DELAY)
         
-        # Try to ping Redis to verify connection
-        temp_conn.ping()
-        logger.info(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
-        app.state.redis_pool = temp_pool
-        app.state.redis_conn = temp_conn
-        logger.warning("!!! Redis connection successful and assigned to app.state.")
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during Redis setup (attempt {attempt}/{REDIS_MAX_RETRIES}): {e}", 
+                       exc_info=True)
+            if attempt == REDIS_MAX_RETRIES:
+                logger.warning(f"!!! Redis connection FAILED after all retries (Other Error: {type(e).__name__}).")
+            else:
+                logger.info(f"Retrying in {REDIS_RETRY_DELAY} seconds...")
+                await asyncio.sleep(REDIS_RETRY_DELAY)
+    
+    # Check if we successfully connected
+    if app.state.redis_conn is None:
+        logger.warning("!!! Application will run without Redis. Some endpoints may not function correctly.")
+    else:
+        # Test Redis functionality
+        try:
+            test_key = "redis_startup_test"
+            test_value = str(datetime.now())
+            app.state.redis_conn.set(test_key, test_value, ex=60)  # 60 second expiry
+            retrieved = app.state.redis_conn.get(test_key)
+            if retrieved == test_value:
+                logger.info("Redis functionality test passed: SET/GET operations successful.")
+            else:
+                logger.warning(f"Redis functionality test anomaly: SET/GET mismatch. Expected {test_value}, got {retrieved}")
+        except Exception as e:
+            logger.error(f"Redis functionality test failed: {e}", exc_info=True)
 
-    except redis.exceptions.ConnectionError as e:
-        logger.error(f"Failed to connect to Redis during startup: {e}", exc_info=True)
-        logger.warning("!!! Redis connection FAILED (ConnectionError).")
-        app.state.redis_pool = None
-        app.state.redis_conn = None
-        if temp_pool: temp_pool.disconnect()
-
-    except Exception as e:
-        logger.error(f"An unexpected error occurred during Redis setup: {e}", exc_info=True)
-        logger.warning(f"!!! Redis connection FAILED (Other Error: {type(e).__name__}).")
-        app.state.redis_pool = None
-        app.state.redis_conn = None
-        if temp_pool: temp_pool.disconnect()
 
 @app.on_event("shutdown")
 async def shutdown_event():
-     redis_pool = getattr(app.state, 'redis_pool', None)
-     if redis_pool:
-         try:
-             redis_pool.disconnect()
-             logging.info("Redis connection pool disconnected.")
-         except Exception as e:
-              logging.error(f"Error disconnecting Redis pool: {e}", exc_info=True)
+    redis_conn = getattr(app.state, 'redis_conn', None)
+    if redis_conn:
+        try:
+            # For individual connection (not connection pool)
+            redis_conn.close()
+            logging.info("Redis connection closed.")
+        except Exception as e:
+            logging.error(f"Error disconnecting Redis: {e}", exc_info=True)
 
 # --- End of File ---
