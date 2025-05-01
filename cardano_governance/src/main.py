@@ -307,7 +307,7 @@ async def start_job(data: StartJobRequest, request: Request):
         logger.info(f"Calculated ISO timestamps: submit={submit_time_iso}, unlock={unlock_time_iso}, dispute={dispute_time_iso}")
 
         # --- Masumi API Call --- (Keep existing logic)
-        payment_service_url = f"{PAYMENT_SERVICE_URL.rstrip('/')}/payment"
+        payment_service_url = f"{PAYMENT_SERVICE_URL.rstrip('/')}/v1/payment"
         payload = {
             "agentIdentifier": agent_identifier, "network": "Preprod",
             "paymentType": "Web3CardanoV1", "identifierFromPurchaser": identifier_from_purchaser,
