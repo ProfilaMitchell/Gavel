@@ -496,6 +496,8 @@ async def startup_event():
             host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD,
             db=REDIS_DB, decode_responses=True
         )
+        ssl=True,
+        ssl_cert_reqs='required'
         temp_conn = redis.Redis(connection_pool=temp_pool)
         temp_conn.ping()
         logger.info(f"Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
