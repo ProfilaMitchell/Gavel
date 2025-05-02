@@ -1,352 +1,451 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gavel Agent</title>
     <style>
-        /* Basic styling for layout */
+        :root {
+            --primary-color: #007bff; /* Blue */
+            --primary-hover-color: #0056b3;
+            --border-color: #dee2e6; /* Light gray */
+            --background-color: #f8f9fa; /* Very light gray */
+            --text-color: #212529; /* Dark gray */
+            --card-background: #ffffff; /* White */
+            --pre-background: #e9ecef; /* Lighter gray for code blocks */
+            --error-color: #dc3545; /* Red */
+        }
+
         body {
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Modern font stack */
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to top */
+            min-height: 100vh; /* Full height */
+            padding-top: 30px; /* Add some space at the top */
+        }
+
+        .container {
+            background-color: var(--card-background);
             max-width: 800px;
-            margin: 20px auto; /* Center content */
-            padding: 15px;
-            border: 1px solid #ccc;
+            width: 90%; /* Responsive width */
+            margin: 0 auto; /* Center content */
+            padding: 25px 30px; /* More padding */
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Subtle shadow */
         }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #gavelImage {
+             display: block;
+             margin: 0 auto 15px auto;
+             max-width: 120px; /* Slightly smaller */
+             height: auto;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            color: var(--text-color);
+            margin-bottom: 5px; /* Reduced margin */
+            font-weight: 600;
+        }
+        h2 {
+             margin-top: 30px;
+             margin-bottom: 15px; /* Added bottom margin */
+             border-bottom: 1px solid var(--border-color);
+             padding-bottom: 8px;
+             font-size: 1.4em;
+             font-weight: 500;
+        }
+
         .input-area {
-            display: flex; /* Arrange input and button side-by-side */
-            gap: 10px; /* Add space between input and button */
-            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            align-items: center; /* Align items vertically */
         }
+
         #proposalQueryInput {
-            flex-grow: 1; /* Allow input to take available space */
-            padding: 8px;
-            border: 1px solid #ccc;
+            flex-grow: 1;
+            padding: 10px 12px; /* Slightly larger padding */
+            border: 1px solid var(--border-color);
             border-radius: 4px;
+            font-size: 1em;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
+        #proposalQueryInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        /* Combined button styles */
         #analyzeButton, #simulatePurchaseButton {
-            padding: 8px 15px;
+            padding: 10px 18px; /* Slightly larger padding */
             cursor: pointer;
-            background-color: #007bff;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 4px;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out;
+            white-space: nowrap; /* Prevent button text wrapping */
         }
         #analyzeButton:hover, #simulatePurchaseButton:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-hover-color);
         }
-        #analyzeButton:disabled, #simulatePurchaseButton:disabled /* <<< Added simulate button */ {
-             background-color: #cccccc;
+        #analyzeButton:disabled, #simulatePurchaseButton:disabled {
+             background-color: #adb5bd; /* Gray out when disabled */
              cursor: not-allowed;
+             opacity: 0.7;
          }
-        #gavelImage {
-             display: block; /* Make image a block element */
-             margin: 0 auto 20px auto; /* Center image and add bottom margin */
-             max-width: 150px; /* Limit image size */
-             height: auto; /* Maintain aspect ratio */
-        }
+
         /* Style for output areas */
         .output-section {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px dashed #eee;
-            background-color: #f9f9f9;
+            margin-top: 25px;
+            padding: 15px 20px; /* Adjusted padding */
+            border: 1px solid var(--border-color); /* Use consistent border color */
+            background-color: var(--card-background); /* Match card background */
             border-radius: 4px;
-            white-space: pre-wrap; /* Preserve formatting */
-            word-wrap: break-word; /* Wrap long lines */
-            overflow-wrap: break-word;
-            font-family: monospace; /* Good for displaying code-like data */
+            font-size: 0.95em; /* Slightly smaller font for details */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04); /* Subtle inner shadow */
         }
-        /* style for pre tags */
+
+        /* Styling for <pre> tags (Purchase Details & Result) */
         pre {
-             overflow-wrap: break-word; /* Add here too */
-             overflow-x: auto;
-             padding-bottom: 10px; /* Add a little space for the scrollbar if it appears */
-             background-color: #efefef; /* Slightly different background for clarity */
-             border-radius: 3px;
-             padding: 10px;
-             /* Optional: Add a horizontal scrollbar if breaking isn't enough */
+             font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; /* Monospace font stack */
+             background-color: var(--pre-background);
+             border: 1px solid #ced4da; /* Slightly darker border for code */
+             border-radius: 4px;
+             padding: 15px;
+             font-size: 0.9em;
+
+             /* --- Improved Wrapping & Scrolling --- */
+             white-space: pre-wrap;   /* Wrap lines but preserve whitespace */
+             word-wrap: break-word;   /* Wrap long words if possible */
+             overflow-wrap: break-word; /* Ensure wrapping */
+             word-break: break-word;  /* Break words if needed */
+             /* Remove horizontal scrollbar - force wrapping */
              /* overflow-x: auto; */
         }
 
-         h2 {
-             margin-top: 30px;
-             border-bottom: 1px solid #eee;
-             padding-bottom: 5px;
+         #statusText {
+             font-weight: 500;
          }
+         #statusText.error { /* Add error class for styling */
+            color: var(--error-color);
+            font-weight: bold;
+         }
+
+         /* Small text below button */
+         .simulate-note {
+             font-size: 0.8em;
+             margin-top: 5px;
+             color: #6c757d; /* Gray text */
+         }
+
     </style>
 </head>
 <body>
-    <img id="gavelImage" src="/static/GavelBlue.png" alt="Gavel Image Placeholder">
+    <div class="container">
+        <header>
+            <img id="gavelImage" src="/static/GavelBlue.png" alt="Gavel Logo">
+            <h1>Cardano Governance Agent</h1>
+            <p>Enter a Cardano Governance Proposal ID (e.g., 188) or 'latest' to analyze.</p>
+        </header>
 
-    <h1>Cardano Governance Agent (Gavel)</h1>
-
-    <div class="input-area">
-        <input type="text" id="proposalQueryInput" placeholder="Enter Proposal ID or 'latest'">
-        <button id="analyzeButton">Analyze Proposal</button>
-    </div>
-
-    <div id="purchaseInfo" class="output-section" style="display: none;">
-        <h2>Action Required: Initiate Purchase</h2>
-        <p>Details for Masumi Payment:</p>
-        <pre id="purchaseDetails"></pre>
-        <button id="simulatePurchaseButton" style="display: none; margin-top: 10px;">Simulate Purchase (Test)</button>
-        <p style="font-size: 0.8em; margin-top: 5px;">(Clicking simulates calling POST /purchase using managed wallet)</p>
+        <div class="input-area">
+            <input type="text" id="proposalQueryInput" placeholder="Enter Proposal ID or 'latest'">
+            <button id="analyzeButton">Analyze Proposal</button>
         </div>
 
-    <div id="jobStatus" class="output-section" style="display: none;">
-         <h2>Job Status</h2>
-         <p id="statusText"></p>
-    </div>
+        <div id="purchaseInfo" class="output-section" style="display: none;">
+            <h2>Action Required: Initiate Purchase</h2>
+            <p>Details for Masumi Payment:</p>
+            <pre id="purchaseDetails"></pre>
+            <button id="simulatePurchaseButton" style="display: none; margin-top: 15px;">Simulate Purchase (Test)</button>
+            <p class="simulate-note">(Clicking simulates calling POST /purchase using managed wallet)</p>
+        </div>
 
-    <div id="jobResult" class="output-section" style="display: none;">
-        <h2>Analysis Result</h2>
-        <pre id="resultText"></pre> </div>
+        <div id="jobStatus" class="output-section" style="display: none;">
+             <h2>Job Status</h2>
+             <p id="statusText"></p> </div>
 
-        <script>
-            // Get references to HTML elements
-            const queryInput = document.getElementById('proposalQueryInput');
-            const analyzeButton = document.getElementById('analyzeButton');
-            const purchaseInfoDiv = document.getElementById('purchaseInfo');
-            const purchaseDetailsPre = document.getElementById('purchaseDetails');
-            const simulateButton = document.getElementById('simulatePurchaseButton');
-            const jobStatusDiv = document.getElementById('jobStatus');
-            const statusTextP = document.getElementById('statusText');
-            const jobResultDiv = document.getElementById('jobResult');
-            const resultTextPre = document.getElementById('resultText');
-    
-            // Variables
-            let currentJobId = null;
-            let currentBlockchainId = null; // <<< Store blockchainId
-            let currentIdFromPurchaser = null; // <<< Store idFromPurchaser
-            let pollingIntervalId = null; // To store the interval ID for stopping later
-    
-            // --- Function to fetch final result ---
-            async function fetchResult(jobId) {
-                statusTextP.textContent = `Job ${jobId} completed. Fetching result...`;
-                try {
-                    const response = await fetch(`/result/${jobId}`); // GET request by default
-                    if (!response.ok) {
-                        const errorData = await response.text();
-                        throw new Error(`HTTP error ${response.status} fetching result: ${errorData}`);
+        <div id="jobResult" class="output-section" style="display: none;">
+            <h2>Analysis Result</h2>
+            <pre id="resultText"></pre> </div>
+    </div><script>
+        // Get references to HTML elements
+        const queryInput = document.getElementById('proposalQueryInput');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const purchaseInfoDiv = document.getElementById('purchaseInfo');
+        const purchaseDetailsPre = document.getElementById('purchaseDetails');
+        const simulateButton = document.getElementById('simulatePurchaseButton');
+        const jobStatusDiv = document.getElementById('jobStatus');
+        const statusTextP = document.getElementById('statusText');
+        const jobResultDiv = document.getElementById('jobResult');
+        const resultTextPre = document.getElementById('resultText');
+
+        // Variables
+        let currentJobId = null;
+        let currentBlockchainId = null;
+        let currentIdFromPurchaser = null;
+        let pollingIntervalId = null;
+
+        // --- Function to fetch final result ---
+        async function fetchResult(jobId) {
+            statusTextP.textContent = `Job ${jobId} completed. Fetching result...`;
+            statusTextP.classList.remove('error'); // Remove error class if present
+            try {
+                const response = await fetch(`/result/${jobId}`);
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    throw new Error(`HTTP error ${response.status} fetching result: ${errorData}`);
+                }
+                const data = await response.json();
+
+                // Attempt to parse result if it's a string that looks like JSON
+                let resultOutput = data.result;
+                if (typeof resultOutput === 'string') {
+                    try {
+                        const parsedJson = JSON.parse(resultOutput);
+                        // If parsing succeeds, pretty-print the JSON object
+                        resultOutput = JSON.stringify(parsedJson, null, 2);
+                    } catch (e) {
+                        // If parsing fails, it's likely just plain text, leave it as is
+                        // console.log("Result is a string, but not valid JSON.");
                     }
-                    const data = await response.json();
-                    if (data.result) {
-                        // Display the result - adjust formatting as needed
-                        resultTextPre.textContent = JSON.stringify(data.result, null, 2); // Pretty-print JSON result
+                } else if (resultOutput) {
+                    // If it's already an object/array (not string), pretty-print it
+                    resultOutput = JSON.stringify(resultOutput, null, 2);
+                } else {
+                    resultOutput = "Job completed, but no result data was returned.";
+                }
+
+                resultTextPre.textContent = resultOutput; // Display formatted/plain text result
+                jobResultDiv.style.display = 'block'; // Show the result section
+
+            } catch (error) {
+                console.error('Error fetching result:', error);
+                resultTextPre.textContent = `Error fetching result: ${error.message}`;
+                jobResultDiv.style.display = 'block'; // Show error in result area
+            } finally {
+                 analyzeButton.disabled = false; // Re-enable button after completion
+                 simulateButton.style.display = 'none'; // Hide simulate button on completion/failure
+            }
+        }
+
+        // --- Function to check job status ---
+        async function checkStatus(jobId) {
+            if (!jobId) return;
+
+            try {
+                const response = await fetch(`/status/${jobId}`);
+                if (!response.ok) {
+                    console.error(`HTTP error ${response.status} checking status.`);
+                     // Optional: Update status text with temporary error
+                     // statusTextP.textContent = `Job ${jobId}: Temporarily unable to check status (Error ${response.status}). Retrying...`;
+                    return; // Continue polling
+                }
+
+                const data = await response.json();
+
+                // Update status display
+                let statusMessage = `Status: ${data.status}`;
+                if(data.payment_status) {
+                    statusMessage += ` (Payment: ${data.payment_status})`;
+                }
+                 if(data.message && data.status !== 'completed') { // Don't show backend messages once completed
+                    statusMessage += `\nMessage: ${data.message}`;
+                }
+                statusTextP.textContent = statusMessage;
+                statusTextP.classList.remove('error'); // Remove error class on successful check
+
+                // Check if job is finished
+                if (data.status === 'completed' || data.status === 'failed') {
+                    if (pollingIntervalId) {
+                        clearInterval(pollingIntervalId);
+                        pollingIntervalId = null;
+                        console.log(`Polling stopped for job ${jobId}. Final status: ${data.status}`);
+                    }
+
+                    if (data.status === 'completed') {
+                        fetchResult(jobId);
                     } else {
-                        resultTextPre.textContent = "Job completed, but no result data was returned.";
+                        // Handle failure case
+                        statusTextP.classList.add('error'); // Add error class for styling
+                        analyzeButton.disabled = false; // Re-enable button on failure
+                        simulateButton.style.display = 'none'; // Hide simulate button
                     }
-                    jobResultDiv.style.display = 'block'; // Show the result section
-    
-                } catch (error) {
-                    console.error('Error fetching result:', error);
-                    resultTextPre.textContent = `Error fetching result: ${error.message}`;
-                    jobResultDiv.style.display = 'block'; // Show error in result area
-                } finally {
-                     analyzeButton.disabled = false; // Re-enable button after completion
                 }
-            }
-    
-            // --- Function to check job status ---
-            async function checkStatus(jobId) {
-                if (!jobId) return; // Don't check if no job ID
-    
-                try {
-                    const response = await fetch(`/status/${jobId}`);
-                    if (!response.ok) {
-                         // Don't stop polling on temporary server error maybe?
-                         // Or handle specific errors differently. For now, just log.
-                        console.error(`HTTP error ${response.status} checking status.`);
-                        // Optionally update status text with temporary error
-                        // statusTextP.textContent = `Temporarily unable to check status (Error ${response.status}). Retrying...`;
-                        return; // Continue polling
-                    }
-    
-                    const data = await response.json();
-    
-                    // Update status display
-                    let statusMessage = `Status: ${data.status}`;
-                    if(data.payment_status) {
-                        statusMessage += ` (Payment: ${data.payment_status})`;
-                    }
-                     if(data.message) {
-                        statusMessage += `\nMessage: ${data.message}`;
-                    }
-                    statusTextP.textContent = statusMessage;
-    
-                    // Check if job is finished
-                    if (data.status === 'completed' || data.status === 'failed') {
-                        if (pollingIntervalId) {
-                            clearInterval(pollingIntervalId); // Stop polling
-                            pollingIntervalId = null; // Clear interval ID
-                            console.log(`Polling stopped for job ${jobId}. Final status: ${data.status}`);
-                        }
-    
-                        if (data.status === 'completed') {
-                            fetchResult(jobId); // Fetch the final result
-                        } else {
-                            // Handle failure case - maybe highlight the status text red
-                            statusTextP.style.color = 'red';
-                            analyzeButton.disabled = false; // Re-enable button on failure
-                        }
-                    }
-    
-                } catch (error) {
-                    console.error('Error checking status:', error);
-                    // Don't stop polling on network errors etc., just log
-                    // statusTextP.textContent = `Error checking status: ${error.message}. Retrying...`;
-                }
-            }
-    
-            // --- Function to start polling ---
-            function startPolling(jobId) {
-                // Clear any existing interval
-                if (pollingIntervalId) {
-                    clearInterval(pollingIntervalId);
-                }
-                console.log(`Starting polling for job ${jobId}`);
-                statusTextP.style.color = 'black'; // Reset color on new job start
-                // Check status immediately, then every 3 seconds (3000ms)
-                checkStatus(jobId);
-                pollingIntervalId = setInterval(() => checkStatus(jobId), 3000);
-            }
 
-            // --- <<< NEW: Function to call the /simulate_purchase endpoint >>> ---
+            } catch (error) {
+                console.error('Error checking status:', error);
+                // statusTextP.textContent = `Job ${jobId}: Error checking status: ${error.message}. Retrying...`; // Avoid overwriting important status
+            }
+        }
+
+        // --- Function to start polling ---
+        function startPolling(jobId) {
+            if (pollingIntervalId) {
+                clearInterval(pollingIntervalId);
+            }
+            console.log(`Starting polling for job ${jobId}`);
+            statusTextP.classList.remove('error'); // Reset error class
+            checkStatus(jobId); // Check status immediately
+            pollingIntervalId = setInterval(() => checkStatus(jobId), 3000); // Check every 3 seconds
+        }
+
+
+        // --- Function to call the /simulate_purchase endpoint ---
         async function simulatePurchase() {
              if (!currentJobId || !currentBlockchainId || !currentIdFromPurchaser) {
                  alert('Job details not available for simulation.');
                  return;
              }
 
-             simulateButton.disabled = true; // Disable button during processing
+             simulateButton.disabled = true;
              statusTextP.textContent = `Job ${currentJobId}: Simulating purchase via backend...`;
+             statusTextP.classList.remove('error'); // Clear previous errors
 
              try {
-                 const response = await fetch('/simulate_purchase', { // Call the new backend endpoint
+                 const response = await fetch('/simulate_purchase', {
                      method: 'POST',
                      headers: { 'Content-Type': 'application/json' },
-                     // Send identifiers needed by the backend
                      body: JSON.stringify({
-                         job_id: currentJobId, // Send job_id for context
+                         job_id: currentJobId,
                          blockchain_identifier: currentBlockchainId,
                          identifier_from_purchaser: currentIdFromPurchaser
-                         // NOTE: Add any other details needed by backend ONLY IF
-                         // they cannot be reliably retrieved from Redis on backend.
                      })
                  });
 
+                 const responseText = await response.text(); // Get text first for better error reporting
                  if (!response.ok) {
-                     const errorData = await response.text();
-                     // Try parsing as JSON if possible
-                     let detail = errorData;
-                     try {
-                         detail = JSON.parse(errorData).detail || errorData;
+                     let detail = responseText;
+                     try { // Try to parse JSON error from backend
+                         detail = JSON.parse(responseText).detail || responseText;
                      } catch(e) {}
                      throw new Error(`HTTP error ${response.status}: ${detail}`);
                  }
 
-                 const result = await response.json(); // Expect {status: "success", message: "..."} or similar
+                 const result = JSON.parse(responseText); // Parse successful response
 
                  statusTextP.textContent = `Job ${currentJobId}: ${result.message || 'Purchase simulation initiated.'} Waiting for confirmation (polling)...`;
-                 simulateButton.style.display = 'none'; // Hide button after successful initiation
+                 simulateButton.style.display = 'none';
 
              } catch (error) {
                  console.error('Error simulating purchase:', error);
                  statusTextP.textContent = `Job ${currentJobId}: Error simulating purchase: ${error.message}`;
+                 statusTextP.classList.add('error'); // Add error class
                  simulateButton.disabled = false; // Re-enable button on error
              }
         }
-        // --- <<< END NEW FUNCTION >>> ---
-    
-            // --- Function to call the /start_job endpoint ---
-            async function startAnalysis() {
-                const queryValue = queryInput.value.trim();
-                if (!queryValue) {
-                    alert('Please enter a proposal query or ID.');
-                    return;
-                }
-    
-                // Clear previous outputs and hide sections
-                currentJobId = null;
-                currentBlockchainId = null; // <<< Clear IDs
-                currentIdFromPurchaser = null; // <<< Clear IDs
-                if (pollingIntervalId) { // Stop previous polling if any
-                    clearInterval(pollingIntervalId);
-                    pollingIntervalId = null;
-                }
-                purchaseDetailsPre.textContent = '';
-                purchaseInfoDiv.style.display = 'none';
-                simulateButton.style.display = 'none'; // <<< Hide simulate button
-                simulateButton.disabled = true; // <<< Disable simulate button
-                statusTextP.textContent = '';
-                jobStatusDiv.style.display = 'none';
-                statusTextP.style.color = 'black'; // Reset color
-                resultTextPre.textContent = '';
-                jobResultDiv.style.display = 'none';
-    
-                // Show initial status & disable button
-                statusTextP.textContent = 'Starting job...REquesting Payment Details...';
-                jobStatusDiv.style.display = 'block';
-                analyzeButton.disabled = true;
-    
-                try {
-                    const response = await fetch('/start_job', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ proposal_query: queryValue })
-                    });
-    
-                    if (!response.ok) {
-                        const errorData = await response.text();
-                        throw new Error(`HTTP error ${response.status}: ${errorData}`);
-                    }
-    
-                    const data = await response.json();
-    
-                    if (data.status === 'success' && data.job_id) {
-                        currentJobId = data.job_id;
-                        currentBlockchainId = data.blockchainIdentifier; // <<< Store ID
-                        currentIdFromPurchaser = data.identifierFromPurchaser; // <<< Store ID
-    
-                        const details = `Job ID: ${data.job_id}\n` + /* ... (rest of details formatting) ... */
-                                        `------------------------------------\n` +
-                                        `blockchainIdentifier: ${data.blockchainIdentifier}\n` +
-                                        `agentIdentifier: ${data.agentIdentifier}\n` +
-                                        `sellerVkey: ${data.sellerVkey}\n` +
-                                        `identifierFromPurchaser: ${data.identifierFromPurchaser}\n` +
-                                        `input_hash: ${data.input_hash}\n` +
-                                        `amounts: ${JSON.stringify(data.amounts, null, 2)}\n` +
-                                        `submitResultTime (ms): ${data.submitResultTime}\n` +
-                                        `unlockTime (ms): ${data.unlockTime}\n` +
-                                        `externalDisputeUnlockTime (ms): ${data.externalDisputeUnlockTime}`;
-    
-                        purchaseDetailsPre.textContent = details;
-                        purchaseInfoDiv.style.display = 'block';
-                        simulateButton.style.display = 'inline-block'; // <<< Show simulate button
-                        simulateButton.disabled = false; // <<< Enable simulate button
-    
-                        statusTextP.textContent = `Job ${currentJobId} created. Waiting for purchase simulation... (Polling started)`;
-                        startPolling(currentJobId); // Start polling status
 
-                        // *** Start polling the status endpoint ***
-                        startPolling(currentJobId);
-    
-                    } else {
-                        throw new Error(data.message || 'Failed to start job. Invalid response from server.');
-                    }
-    
-                } catch (error) {
-                    console.error('Error starting analysis:', error);
-                    statusTextP.textContent = `Error: ${error.message}`;
-                    analyzeButton.disabled = false; // Re-enable button on startup error
-                }
-                // Note: Button remains disabled after successful start until job completes/fails
+
+        // --- Function to call the /start_job endpoint ---
+        async function startAnalysis() {
+            const queryValue = queryInput.value.trim();
+            if (!queryValue) {
+                alert('Please enter a proposal query or ID.');
+                return;
             }
-    
-            // Attach the function to the button click event
-            analyzeButton.addEventListener('click', startAnalysis);
-            simulateButton.addEventListener('click', simulatePurchase); // <<< Attach listener
 
-        </script>    
+            // --- Reset UI ---
+            currentJobId = null;
+            currentBlockchainId = null;
+            currentIdFromPurchaser = null;
+            if (pollingIntervalId) {
+                clearInterval(pollingIntervalId);
+                pollingIntervalId = null;
+            }
+            purchaseDetailsPre.textContent = '';
+            purchaseInfoDiv.style.display = 'none';
+            simulateButton.style.display = 'none';
+            simulateButton.disabled = true;
+            statusTextP.textContent = '';
+            statusTextP.classList.remove('error'); // Remove error class
+            jobStatusDiv.style.display = 'none';
+            resultTextPre.textContent = '';
+            jobResultDiv.style.display = 'none';
+            analyzeButton.disabled = true; // Disable analyze button immediately
+            // --- End Reset UI ---
+
+            statusTextP.textContent = 'Starting job... Requesting payment details...';
+            jobStatusDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/start_job', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ proposal_query: queryValue })
+                });
+
+                const responseText = await response.text(); // Get text first for better error reporting
+                if (!response.ok) {
+                    let detail = responseText;
+                     try { // Try to parse JSON error from backend
+                         detail = JSON.parse(responseText).detail || responseText;
+                     } catch(e) {}
+                    throw new Error(`HTTP error ${response.status}: ${detail}`);
+                }
+
+                const data = JSON.parse(responseText); // Parse successful response
+
+                if (data.status === 'success' && data.job_id) {
+                    // Store details needed
+                    currentJobId = data.job_id;
+                    currentBlockchainId = data.blockchainIdentifier;
+                    currentIdFromPurchaser = data.identifierFromPurchaser;
+
+                    // Format and display purchase details
+                    const details = `Job ID: ${data.job_id}\n` +
+                                    `------------------------------------\n` +
+                                    `blockchainIdentifier: ${data.blockchainIdentifier}\n` +
+                                    `agentIdentifier: ${data.agentIdentifier}\n` +
+                                    `sellerVkey: ${data.sellerVkey}\n` +
+                                    `identifierFromPurchaser: ${data.identifierFromPurchaser}\n` +
+                                    `input_hash: ${data.input_hash}\n` +
+                                    `amounts: ${JSON.stringify(data.amounts, null, 2)}\n` +
+                                    `submitResultTime (ms): ${data.submitResultTime}\n` +
+                                    `unlockTime (ms): ${data.unlockTime}\n` +
+                                    `externalDisputeUnlockTime (ms): ${data.externalDisputeUnlockTime}`;
+
+                    purchaseDetailsPre.textContent = details;
+                    purchaseInfoDiv.style.display = 'block';
+                    simulateButton.style.display = 'inline-block'; // Use inline-block to appear next to text potentially
+                    simulateButton.disabled = false;
+
+                    statusTextP.textContent = `Job ${currentJobId} created. Click 'Simulate Purchase' or pay externally. (Polling started)`;
+                    startPolling(currentJobId); // Start polling status
+
+                } else {
+                     // Handle cases where status is not 'success' even if response is 2xx
+                    throw new Error(data.message || 'Failed to start job. Invalid response data from server.');
+                }
+
+            } catch (error) {
+                console.error('Error starting analysis:', error);
+                statusTextP.textContent = `Error starting job: ${error.message}`;
+                statusTextP.classList.add('error'); // Add error class
+                analyzeButton.disabled = false; // Re-enable button on startup error
+            }
+        }
+
+        // Attach the functions to the button click events
+        analyzeButton.addEventListener('click', startAnalysis);
+        simulateButton.addEventListener('click', simulatePurchase);
+
+    </script>
 </body>
 </html>
