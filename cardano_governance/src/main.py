@@ -119,6 +119,13 @@ class Availability(BaseModel):
     status: str = "available"
     message: Optional[str] = None
 
+class SimulatePurchaseRequest(BaseModel):
+    job_id: str
+    blockchain_identifier: str
+    identifier_from_purchaser: str
+    # Add other fields ONLY if passing from frontend instead of getting from Redis/reconstruction
+    # e.g., seller_vkey: str | None = None # etc
+
 
 # --- Task Function ---
 async def execute_crew_task(inputs: dict) -> str:
@@ -376,15 +383,48 @@ async def start_job(data: StartJobRequest, request: Request):
             raise HTTPException(status_code=500, 
                             detail=f"Error communicating with payment service: {str(e)}")
 
-        # --- Store Initial Job Data in Redis ---
+        # --- Capture data needed for /purchase payload ---
+        # These should be available from earlier in the function or response processing
+        submit_time_from_response = payment_data_response.get("submitResultTime")
+        unlock_time_from_response = payment_data_response.get("unlockTime")
+        external_dispute_time_from_response = payment_data_response.get("externalDisputeUnlockTime")
+        # Define constants used in the request payload to Masumi /payment
+        network_value = "Preprod"
+        payment_type_value = "Web3CardanoV1"
+        # Get seller_vkey retrieved earlier from env var
+        seller_vkey_value = seller_vkey # Already retrieved via os.getenv earlier in function
+
+        # --- Store Enriched Job Data in Redis ---
         initial_job_data = {
-            "status": "awaiting_payment", "payment_status": "pending",
-            "payment_id": payment_id, "input_data": data.proposal_query,
-            "input_hash": input_hash, "result": "", "message": ""
+            # Original fields
+            "status": "awaiting_payment",
+            "payment_status": "pending",
+            "payment_id": payment_id,             # This is the blockchainIdentifier
+            "input_data": data.proposal_query,    # Original query text
+            "input_hash": input_hash,             # Hash of input
+            "result": "",                         # Placeholder for result
+            "message": "",                        # Placeholder for messages
+
+            # --- Added fields needed for /purchase simulation ---
+            "identifierFromPurchaser": identifier_from_purchaser,
+            "sellerVkey": seller_vkey_value,
+            "paymentType": payment_type_value,
+            "submitResultTime": submit_time_from_response,
+            "unlockTime": unlock_time_from_response,
+            "externalDisputeUnlockTime": external_dispute_time_from_response,
+            "agentIdentifier": agent_identifier,    # Agent's registered ID
+            "network": network_value
         }
-        redis_conn.hset(name=job_id, mapping=initial_job_data)
+
+        # Ensure all values are strings for Redis hset
+        # Handle potential None values by converting them to empty strings
+        initial_job_data_str_map = {k: str(v) if v is not None else "" for k, v in initial_job_data.items()}
+
+        # Store the enriched data
+        redis_conn.hset(name=job_id, mapping=initial_job_data_str_map)
         redis_conn.expire(name=job_id, time=timedelta(days=7)) # Set expiry
-        logger.info(f"Stored initial job data for {job_id} in Redis.")
+        logger.info(f"Stored enriched job data for {job_id} in Redis.")
+
 
         # --- Setup Masumi Monitoring ---
         amounts = [Amount(amount=str(PAYMENT_AMOUNT), unit=PAYMENT_UNIT)] # Ensure amount is string if needed
@@ -432,6 +472,125 @@ async def start_job(data: StartJobRequest, request: Request):
         logger.error(f"Error creating job {job_id if 'job_id' in locals() else 'unknown'}: {str(e)}", exc_info=True)
         # Try to clean up Redis entry if job creation failed mid-way? Difficult.
         raise HTTPException(status_code=500, detail=f"Internal server error creating job: {str(e)}")
+
+@app.post("/simulate_purchase")
+async def trigger_purchase_simulation(sim_request: SimulatePurchaseRequest, request: Request):
+    """
+    Receives identifiers from the frontend and triggers the
+    Masumi Payment Service POST /purchase endpoint using the backend API key.
+    """
+    logger.info(f"Received purchase simulation request for job {sim_request.job_id} / bcId {sim_request.blockchain_identifier[:10]}...")
+
+    # Retrieve necessary env vars (ensure they are loaded)
+    # Assuming PAYMENT_SERVICE_URL now includes /api/v1 based on previous fix
+    payment_service_base_url = os.getenv("PAYMENT_SERVICE_URL", "http://masumi-payment-service:3001/api/v1")
+    payment_api_key = os.getenv("PAYMENT_API_KEY")
+    agent_identifier = os.getenv("AGENT_IDENTIFIER") # Registered Agent ID
+
+    if not all([payment_service_base_url, payment_api_key, agent_identifier]):
+        logger.error("Payment service URL, API Key, or Agent Identifier not configured for simulation.")
+        raise HTTPException(status_code=500, detail="Simulation endpoint configuration error: Missing env vars")
+
+    # Construct URL for Masumi's /purchase endpoint
+    purchase_url = f"{payment_service_base_url.rstrip('/')}/purchase/" # Add trailing slash if needed by API
+    logger.info(f"Attempting to call Masumi purchase endpoint: {purchase_url}")
+
+    # --- Get ALL required data for the /purchase payload ---
+    # BEST METHOD: Retrieve ALL details stored in Redis during /start_job
+    # If not all details are in Redis, this reconstruction is needed and less robust.
+    # MODIFY /start_job in main.py TO STORE THESE VALUES IN REDIS if they aren't already.
+
+    redis_conn = getattr(request.app.state, 'redis_conn', None)
+    if not redis_conn or not redis_conn.exists(sim_request.job_id):
+         logger.error(f"Cannot simulate purchase: Job details for {sim_request.job_id} not found in Redis.")
+         # Consider if we can proceed with defaults/reconstruction if Redis fails, or just error out.
+         # For now, we'll try reconstruction with fallbacks, but Redis is better.
+         job_data = {} # Fallback to empty dict if Redis fails
+         # raise HTTPException(status_code=404, detail="Original job details not found for simulation.") # Option to fail hard
+    else:
+        job_data = redis_conn.hgetall(sim_request.job_id)
+        logger.info(f"Retrieved job data from Redis for {sim_request.job_id}")
+
+    # Attempt to get required fields (using defaults/env vars as shaky fallbacks)
+    # !! These fallbacks are NOT ideal - store them in Redis from /start_job !!
+    retrieved_seller_vkey = job_data.get("sellerVkey", os.getenv("SELLER_VKEY"))
+    retrieved_input_hash = job_data.get("input_hash")
+    retrieved_submit_time = job_data.get("submitResultTime")
+    retrieved_unlock_time = job_data.get("unlockTime")
+    retrieved_external_dispute_time = job_data.get("externalDisputeUnlockTime")
+
+    # Validate required reconstructed fields
+    if not all([retrieved_seller_vkey, retrieved_input_hash, retrieved_submit_time, retrieved_unlock_time, retrieved_external_dispute_time]):
+         # Log which specific field is missing
+         missing = [k for k, v in {
+             "sellerVkey": retrieved_seller_vkey,
+             "input_hash": retrieved_input_hash,
+             "submitResultTime": retrieved_submit_time,
+             "unlockTime": retrieved_unlock_time,
+             "externalDisputeUnlockTime": retrieved_external_dispute_time
+         }.items() if v is None]
+         logger.error(f"Cannot reconstruct /purchase payload: Missing required fields from Redis/storage: {missing} for job {sim_request.job_id}")
+         raise HTTPException(status_code=500, detail=f"Failed to retrieve necessary job details for simulation: {', '.join(missing)} missing. Ensure /start_job stores these.")
+
+    # Construct the final payload for POST /purchase
+    # Using the structure confirmed to work previously (no "Amounts")
+    payload = {
+        "identifierFromPurchaser": sim_request.identifier_from_purchaser,
+        "blockchainIdentifier": sim_request.blockchain_identifier,
+        "network": "Preprod", # Assuming Preprod for testing
+        "sellerVkey": retrieved_seller_vkey,
+        "paymentType": "Web3CardanoV1", # Assuming
+        "submitResultTime": retrieved_submit_time,
+        "unlockTime": retrieved_unlock_time,
+        "externalDisputeUnlockTime": retrieved_external_dispute_time,
+        "agentIdentifier": agent_identifier, # Agent's registered ID
+        "inputHash": retrieved_input_hash
+    }
+    logger.debug(f"Constructed /purchase payload for job {sim_request.job_id}: {payload}")
+
+
+    headers = {
+        "accept": "application/json",
+        "token": payment_api_key, # Use the agent's API key securely from backend env
+        "Content-Type": "application/json"
+    }
+
+    try:
+        timeout = httpx.Timeout(10.0, connect=5.0, read=30.0) # Adjust timeouts as needed
+        # Assuming internal http, verify=False might be needed if using self-signed certs, but likely not for http
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(purchase_url, headers=headers, json=payload)
+
+            # Check response status carefully
+            if 200 <= response.status_code < 300:
+                response_data = response.json()
+                if response_data.get("status") == "success":
+                    logger.info(f"Successfully initiated purchase simulation via Masumi for job {sim_request.job_id}. Next action: {response_data.get('data', {}).get('NextAction', {}).get('requestedAction')}")
+                    return {"status": "success", "message": "Purchase simulation initiated successfully via Masumi."}
+                else:
+                    # Got a 2xx response, but status field is not "success"
+                    logger.error(f"Masumi /purchase call returned non-success status {response.status_code} for job {sim_request.job_id}: {response.text}")
+                    raise HTTPException(status_code=500, detail=f"Masumi simulation failed: {response_data.get('error', {}).get('message', 'Unknown error')}")
+            else:
+                # Handle non-2xx responses (e.g., 4xx, 5xx from Masumi)
+                 error_detail = f"Error calling Masumi /purchase: {response.status_code}"
+                 try:
+                     error_body = response.json()
+                     error_detail += f" - {error_body.get('error', {}).get('message', response.text)}"
+                 except Exception:
+                     error_detail += f" - {response.text}"
+                 logger.error(f"{error_detail} for job {sim_request.job_id}")
+                 raise HTTPException(status_code=response.status_code, detail=error_detail)
+
+
+    except httpx.RequestError as e:
+        logger.error(f"HTTPX RequestError during purchase simulation for job {sim_request.job_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=503, detail=f"Network error communicating with payment service during simulation: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error during purchase simulation for job {sim_request.job_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error during simulation: {str(e)}")
+
+# <<< END NEW ENDPOINT FUNCTION >>>
 
 
 # --- Status Endpoint (Modified for Redis) ---

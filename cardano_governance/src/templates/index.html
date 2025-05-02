@@ -23,7 +23,7 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-        #analyzeButton {
+        #analyzeButton, #simulatePurchaseButton {
             padding: 8px 15px;
             cursor: pointer;
             background-color: #007bff;
@@ -31,9 +31,13 @@
             border: none;
             border-radius: 4px;
         }
-        #analyzeButton:hover {
+        #analyzeButton:hover, #simulatePurchaseButton:hover {
             background-color: #0056b3;
         }
+        #analyzeButton:disabled, #simulatePurchaseButton:disabled /* <<< Added simulate button */ {
+             background-color: #cccccc;
+             cursor: not-allowed;
+         }
         #gavelImage {
              display: block; /* Make image a block element */
              margin: 0 auto 20px auto; /* Center image and add bottom margin */
@@ -82,9 +86,12 @@
     </div>
 
     <div id="purchaseInfo" class="output-section" style="display: none;">
-        <h2>Action Required: Simulate Purchase</h2>
-        <p>Please use the details below to call the Masumi `POST /purchase` endpoint:</p>
-        <pre id="purchaseDetails"></pre> </div>
+        <h2>Action Required: Initiate Purchase</h2>
+        <p>Details for Masumi Payment:</p>
+        <pre id="purchaseDetails"></pre>
+        <button id="simulatePurchaseButton" style="display: none; margin-top: 10px;">Simulate Purchase (Test)</button>
+        <p style="font-size: 0.8em; margin-top: 5px;">(Clicking simulates calling POST /purchase using managed wallet)</p>
+        </div>
 
     <div id="jobStatus" class="output-section" style="display: none;">
          <h2>Job Status</h2>
@@ -101,6 +108,7 @@
             const analyzeButton = document.getElementById('analyzeButton');
             const purchaseInfoDiv = document.getElementById('purchaseInfo');
             const purchaseDetailsPre = document.getElementById('purchaseDetails');
+            const simulateButton = document.getElementById('simulatePurchaseButton');
             const jobStatusDiv = document.getElementById('jobStatus');
             const statusTextP = document.getElementById('statusText');
             const jobResultDiv = document.getElementById('jobResult');
@@ -108,6 +116,8 @@
     
             // Variables
             let currentJobId = null;
+            let currentBlockchainId = null; // <<< Store blockchainId
+            let currentIdFromPurchaser = null; // <<< Store idFromPurchaser
             let pollingIntervalId = null; // To store the interval ID for stopping later
     
             // --- Function to fetch final result ---
@@ -200,6 +210,53 @@
                 checkStatus(jobId);
                 pollingIntervalId = setInterval(() => checkStatus(jobId), 3000);
             }
+
+            // --- <<< NEW: Function to call the /simulate_purchase endpoint >>> ---
+        async function simulatePurchase() {
+             if (!currentJobId || !currentBlockchainId || !currentIdFromPurchaser) {
+                 alert('Job details not available for simulation.');
+                 return;
+             }
+
+             simulateButton.disabled = true; // Disable button during processing
+             statusTextP.textContent = `Job ${currentJobId}: Simulating purchase via backend...`;
+
+             try {
+                 const response = await fetch('/simulate_purchase', { // Call the new backend endpoint
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     // Send identifiers needed by the backend
+                     body: JSON.stringify({
+                         job_id: currentJobId, // Send job_id for context
+                         blockchain_identifier: currentBlockchainId,
+                         identifier_from_purchaser: currentIdFromPurchaser
+                         // NOTE: Add any other details needed by backend ONLY IF
+                         // they cannot be reliably retrieved from Redis on backend.
+                     })
+                 });
+
+                 if (!response.ok) {
+                     const errorData = await response.text();
+                     // Try parsing as JSON if possible
+                     let detail = errorData;
+                     try {
+                         detail = JSON.parse(errorData).detail || errorData;
+                     } catch(e) {}
+                     throw new Error(`HTTP error ${response.status}: ${detail}`);
+                 }
+
+                 const result = await response.json(); // Expect {status: "success", message: "..."} or similar
+
+                 statusTextP.textContent = `Job ${currentJobId}: ${result.message || 'Purchase simulation initiated.'} Waiting for confirmation (polling)...`;
+                 simulateButton.style.display = 'none'; // Hide button after successful initiation
+
+             } catch (error) {
+                 console.error('Error simulating purchase:', error);
+                 statusTextP.textContent = `Job ${currentJobId}: Error simulating purchase: ${error.message}`;
+                 simulateButton.disabled = false; // Re-enable button on error
+             }
+        }
+        // --- <<< END NEW FUNCTION >>> ---
     
             // --- Function to call the /start_job endpoint ---
             async function startAnalysis() {
@@ -211,20 +268,24 @@
     
                 // Clear previous outputs and hide sections
                 currentJobId = null;
+                currentBlockchainId = null; // <<< Clear IDs
+                currentIdFromPurchaser = null; // <<< Clear IDs
                 if (pollingIntervalId) { // Stop previous polling if any
                     clearInterval(pollingIntervalId);
                     pollingIntervalId = null;
                 }
                 purchaseDetailsPre.textContent = '';
                 purchaseInfoDiv.style.display = 'none';
+                simulateButton.style.display = 'none'; // <<< Hide simulate button
+                simulateButton.disabled = true; // <<< Disable simulate button
                 statusTextP.textContent = '';
                 jobStatusDiv.style.display = 'none';
-                 statusTextP.style.color = 'black'; // Reset color
+                statusTextP.style.color = 'black'; // Reset color
                 resultTextPre.textContent = '';
                 jobResultDiv.style.display = 'none';
     
                 // Show initial status & disable button
-                statusTextP.textContent = 'Starting job...';
+                statusTextP.textContent = 'Starting job...REquesting Payment Details...';
                 jobStatusDiv.style.display = 'block';
                 analyzeButton.disabled = true;
     
@@ -244,6 +305,8 @@
     
                     if (data.status === 'success' && data.job_id) {
                         currentJobId = data.job_id;
+                        currentBlockchainId = data.blockchainIdentifier; // <<< Store ID
+                        currentIdFromPurchaser = data.identifierFromPurchaser; // <<< Store ID
     
                         const details = `Job ID: ${data.job_id}\n` + /* ... (rest of details formatting) ... */
                                         `------------------------------------\n` +
@@ -259,9 +322,12 @@
     
                         purchaseDetailsPre.textContent = details;
                         purchaseInfoDiv.style.display = 'block';
+                        simulateButton.style.display = 'inline-block'; // <<< Show simulate button
+                        simulateButton.disabled = false; // <<< Enable simulate button
     
                         statusTextP.textContent = `Job ${currentJobId} created. Waiting for purchase simulation... (Polling started)`;
-    
+                        startPolling(currentJobId); // Start polling status
+
                         // *** Start polling the status endpoint ***
                         startPolling(currentJobId);
     
@@ -279,7 +345,8 @@
     
             // Attach the function to the button click event
             analyzeButton.addEventListener('click', startAnalysis);
-    
+            simulateButton.addEventListener('click', simulatePurchase); // <<< Attach listener
+
         </script>    
 </body>
 </html>
