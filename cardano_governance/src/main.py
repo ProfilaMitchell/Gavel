@@ -268,37 +268,50 @@ async def get_availability(request: Request): # Add request
     final_message = "Agent is operational." if status == "available" else " | ".join(messages)
     return Availability(status=status, message=final_message)
 
-# --- Start Job Endpoint (Modified for Redis) ---
+
+#startjobendpoint
 @app.post("/start_job", status_code=202) # Use 202 Accepted for async job start
 async def start_job(data: StartJobRequest, request: Request):
-    """ Initiates a job and creates a payment request, storing job in Redis """
+    """ Initiates a job and creates a payment request, storing enriched job data in Redis """
     redis_conn = getattr(request.app.state, 'redis_conn', None)
     if not redis_conn:
-         raise HTTPException(status_code=503, detail="Database connection not available")
+        logger.error("Redis connection not available in start_job.") # Added logger
+        raise HTTPException(status_code=503, detail="Database connection not available")
 
     if not config: # Check if Masumi config is available
+        logger.error("Masumi config not available in start_job.") # Added logger
         raise HTTPException(status_code=503, detail="Masumi Payment Service not configured")
-        
+
     # Log the raw payment service URL for debugging
+    # Assuming PAYMENT_SERVICE_URL is loaded globally or passed correctly
     logger.info(f"Raw PAYMENT_SERVICE_URL from environment: {os.getenv('PAYMENT_SERVICE_URL', 'Not set')}")
 
     try:
         job_id = str(uuid.uuid4())
         logger.info(f"Creating new job {job_id} with input query: {data.proposal_query}")
 
+        # --- Retrieve necessary identifiers and keys early ---
         agent_identifier = os.getenv("AGENT_IDENTIFIER")
         if not agent_identifier:
             logger.error("AGENT_IDENTIFIER not found in environment.")
             raise HTTPException(status_code=500, detail="Agent identifier not configured")
 
-        identifier_from_purchaser = f"job_{job_id[:20]}"
+        # <<< --- MOVED SELLER_VKEY RETRIEVAL HERE --- >>>
+        seller_vkey = os.getenv("SELLER_VKEY")
+        if not seller_vkey:
+            # Log warning early, but allow proceeding for now. Stored value will be empty string.
+            logger.warning("SELLER_VKEY not found in environment variables early in start_job.")
 
+        identifier_from_purchaser = f"job_{job_id[:20]}" # Use a consistent slice length
+
+        # --- Prepare input hash ---
         crew_input_dict = {"proposal_query": data.proposal_query}
         input_data_string = json.dumps(crew_input_dict, sort_keys=True)
         input_hash = hashlib.sha256(input_data_string.encode('utf-8')).hexdigest()
         logger.info(f"Generated input hash: {input_hash}")
 
-        # --- Timestamps --- (Keep existing logic)
+        # --- Timestamps --- (Keep existing logic - ensure timedelta is imported)
+        from datetime import timedelta # Ensure timedelta is imported
         submit_duration = timedelta(days=1)
         unlock_duration = timedelta(days=2)
         dispute_duration = timedelta(days=3)
@@ -306,171 +319,175 @@ async def start_job(data: StartJobRequest, request: Request):
         submit_time_dt = now_utc + submit_duration
         unlock_time_dt = now_utc + unlock_duration
         dispute_time_dt = now_utc + dispute_duration
+        # Ensure minimum time differences
         if unlock_time_dt <= submit_time_dt + timedelta(hours=1):
             unlock_time_dt = submit_time_dt + timedelta(hours=1)
-        min_dispute_diff = timedelta(minutes=16)
+        min_dispute_diff = timedelta(minutes=16) # Example minimum
         if dispute_time_dt <= unlock_time_dt + min_dispute_diff:
              dispute_time_dt = unlock_time_dt + min_dispute_diff
-        submit_time_iso = submit_time_dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-        unlock_time_iso = unlock_time_dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-        dispute_time_iso = dispute_time_dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        # Convert to ISO format strings expected by Masumi /payment
+        submit_time_iso = submit_time_dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+        unlock_time_iso = unlock_time_dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+        dispute_time_iso = dispute_time_dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
         logger.info(f"Calculated ISO timestamps: submit={submit_time_iso}, unlock={unlock_time_iso}, dispute={dispute_time_iso}")
 
-        # --- Masumi API Call --- (CORRECTED URL CONSTRUCTION)
+        # --- Masumi API Call (Create Payment Intent) ---
+        # Assuming PAYMENT_SERVICE_URL and PAYMENT_API_KEY are available globally or via config
         base_url = PAYMENT_SERVICE_URL.rstrip('/')
-        
-        # Check if the base URL already contains /api/v1
+
+        # Construct payment service URL intelligently based on current URL format
         if '/api/v1' in base_url:
-            # URL already has /api/v1, just add /payment
-            payment_service_url = f"{base_url}/payment"
+             payment_service_endpoint = f"{base_url}/payment" # If base includes /api/v1
         else:
-            # URL doesn't have /api/v1, add it before /payment
-            payment_service_url = f"{base_url}/api/v1/payment"
-        
-        # Log the constructed URL for debugging
-        logger.info(f"Constructed payment service URL: {payment_service_url}")
-        
-        payload = {
-            "agentIdentifier": agent_identifier, 
-            "network": "Preprod",
-            "paymentType": "Web3CardanoV1", 
+             payment_service_endpoint = f"{base_url}/api/v1/payment" # If base does not include /api/v1
+
+        logger.info(f"Constructed Masumi /payment endpoint URL: {payment_service_endpoint}")
+
+        # Define payload for Masumi /payment endpoint
+        payment_payload = {
+            "agentIdentifier": agent_identifier,
+            "network": "Preprod", # Hardcoded or from config
+            "paymentType": "Web3CardanoV1", # Hardcoded or from config
             "identifierFromPurchaser": identifier_from_purchaser,
-            "inputHash": input_hash, 
+            "inputHash": input_hash,
             "submitResultTime": submit_time_iso,
-            "unlockTime": unlock_time_iso, 
+            "unlockTime": unlock_time_iso,
             "externalDisputeUnlockTime": dispute_time_iso
         }
-        
-        # Log the full payload for debugging
-        logger.info(f"Payment service payload: {json.dumps(payload)}")
-        
+        logger.info(f"Masumi /payment payload: {json.dumps(payment_payload)}")
+
         headers = {"Content-Type": "application/json", "token": PAYMENT_API_KEY}
-        payment_id = None
-        payment_data_response = None # Store response data for return
+        payment_id = None             # Will hold blockchainIdentifier
+        payment_data_response = None  # Will hold the 'data' part of the response
 
         try:
-            # Use custom timeout and add verification=False for self-signed certs
             PAYMENT_TIMEOUT = int(os.getenv("PAYMENT_TIMEOUT", "30"))
-            async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT, verify=False) as client:
-                response = await client.post(payment_service_url, headers=headers, json=payload)
-                
+            async with httpx.AsyncClient(timeout=PAYMENT_TIMEOUT, verify=False) as client: # verify=False for internal http if needed
+                response = await client.post(payment_service_endpoint, headers=headers, json=payment_payload)
+
                 if response.status_code != 200:
-                    logger.error(f"Payment service error ({response.status_code}): {response.text}")
-                    raise HTTPException(status_code=response.status_code, 
-                                    detail=f"Payment service error: {response.text}")
-                
+                    logger.error(f"Masumi /payment service error ({response.status_code}): {response.text}")
+                    # Try to parse error detail from Masumi response
+                    detail_msg = f"Payment service error: {response.text}"
+                    try:
+                        error_json = response.json()
+                        detail_msg = f"Payment service error: {error_json.get('error', {}).get('message', response.text)}"
+                    except Exception:
+                        pass # Keep original text if JSON parsing fails
+                    raise HTTPException(status_code=response.status_code, detail=detail_msg)
+
                 payment_data = response.json()
-                logger.info(f"Payment service response: {payment_data}")
-                
+                logger.info(f"Masumi /payment service response: {payment_data}")
+
                 if "data" not in payment_data or "blockchainIdentifier" not in payment_data["data"]:
-                    logger.error(f"Invalid payment service response: {payment_data}")
-                    raise HTTPException(status_code=500, detail="Invalid payment service response")
-                
-                payment_id = payment_data["data"]["blockchainIdentifier"]
-                payment_data_response = payment_data["data"]
-                logger.info(f"Successfully obtained payment ID: {payment_id}")
-                
+                    logger.error(f"Invalid Masumi /payment service response structure: {payment_data}")
+                    raise HTTPException(status_code=500, detail="Invalid payment service response structure")
+
+                payment_id = payment_data["data"]["blockchainIdentifier"] # This IS the blockchainIdentifier
+                payment_data_response = payment_data["data"] # Store the whole data part
+                logger.info(f"Successfully obtained blockchainIdentifier (payment_id): {payment_id[:15]}...") # Log truncated ID
+
         except httpx.ConnectError as e:
-            logger.error(f"Failed to connect to payment service: {str(e)}")
-            raise HTTPException(status_code=503, 
-                            detail=f"Cannot connect to payment service. Please try again later.")
+            logger.error(f"Failed to connect to payment service at {payment_service_endpoint}: {str(e)}")
+            raise HTTPException(status_code=503, detail="Cannot connect to payment service. Please try again later.")
         except httpx.TimeoutException as e:
-            logger.error(f"Timeout connecting to payment service: {str(e)}")
-            raise HTTPException(status_code=504, 
-                            detail=f"Payment service timed out. Please try again later.")
+            logger.error(f"Timeout connecting to payment service at {payment_service_endpoint}: {str(e)}")
+            raise HTTPException(status_code=504, detail="Payment service timed out. Please try again later.")
+        except HTTPException:
+             raise # Re-raise HTTP exceptions from response handling
         except Exception as e:
-            logger.error(f"Payment service error: {str(e)}", exc_info=True)
-            raise HTTPException(status_code=500, 
-                            detail=f"Error communicating with payment service: {str(e)}")
+            logger.error(f"Unexpected error during Masumi /payment call: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Error communicating with payment service: {str(e)}")
+
 
         # --- Capture data needed for /purchase payload ---
-        # These should be available from earlier in the function or response processing
+        # Extract timestamps directly from the successful response object
         submit_time_from_response = payment_data_response.get("submitResultTime")
         unlock_time_from_response = payment_data_response.get("unlockTime")
         external_dispute_time_from_response = payment_data_response.get("externalDisputeUnlockTime")
-        # Define constants used in the request payload to Masumi /payment
+        # Define constants used in the requests
         network_value = "Preprod"
         payment_type_value = "Web3CardanoV1"
-        # Get seller_vkey retrieved earlier from env var
-        seller_vkey_value = seller_vkey # Already retrieved via os.getenv earlier in function
+        # Use seller_vkey retrieved earlier
 
         # --- Store Enriched Job Data in Redis ---
         initial_job_data = {
-            # Original fields
+            # Original fields needed by Gavel/UI
             "status": "awaiting_payment",
             "payment_status": "pending",
-            "payment_id": payment_id,             # This is the blockchainIdentifier
-            "input_data": data.proposal_query,    # Original query text
-            "input_hash": input_hash,             # Hash of input
-            "result": "",                         # Placeholder for result
-            "message": "",                        # Placeholder for messages
+            "input_data": data.proposal_query, # Original query text
+            "result": "", # Placeholder for result
+            "message": "", # Placeholder for messages
 
-            # --- Added fields needed for /purchase simulation ---
+            # --- Fields needed for monitoring AND /purchase simulation ---
+            "payment_id": payment_id, # This is blockchainIdentifier
+            "input_hash": input_hash,
             "identifierFromPurchaser": identifier_from_purchaser,
-            "sellerVkey": seller_vkey_value,
+            "sellerVkey": seller_vkey, # Use variable retrieved earlier
             "paymentType": payment_type_value,
-            "submitResultTime": submit_time_from_response,
-            "unlockTime": unlock_time_from_response,
-            "externalDisputeUnlockTime": external_dispute_time_from_response,
-            "agentIdentifier": agent_identifier,    # Agent's registered ID
+            "submitResultTime": submit_time_from_response, # From /payment response
+            "unlockTime": unlock_time_from_response, # From /payment response
+            "externalDisputeUnlockTime": external_dispute_time_from_response, # From /payment response
+            "agentIdentifier": agent_identifier, # Agent's registered ID (from env)
             "network": network_value
         }
 
         # Ensure all values are strings for Redis hset
-        # Handle potential None values by converting them to empty strings
         initial_job_data_str_map = {k: str(v) if v is not None else "" for k, v in initial_job_data.items()}
 
-        # Store the enriched data
+        # Store the enriched data in Redis
         redis_conn.hset(name=job_id, mapping=initial_job_data_str_map)
         redis_conn.expire(name=job_id, time=timedelta(days=7)) # Set expiry
         logger.info(f"Stored enriched job data for {job_id} in Redis.")
 
 
         # --- Setup Masumi Monitoring ---
-        amounts = [Amount(amount=str(PAYMENT_AMOUNT), unit=PAYMENT_UNIT)] # Ensure amount is string if needed
+        # Assuming Amount and Payment are imported from masumi_crewai.payment
+        # Assuming PAYMENT_AMOUNT and PAYMENT_UNIT are defined globally or loaded
+        amounts = [Amount(amount=str(PAYMENT_AMOUNT), unit=PAYMENT_UNIT)]
         monitoring_payment = Payment(
             agent_identifier=agent_identifier, amounts=amounts,
             config=config, identifier_from_purchaser=identifier_from_purchaser
         )
-        monitoring_payment.payment_ids.add(payment_id)
+        monitoring_payment.payment_ids.add(payment_id) # Add the blockchainIdentifier
+        # Assuming payment_instances dict is defined globally
         payment_instances[job_id] = monitoring_payment
 
         # --- Define and Start Callback ---
         async def payment_callback_wrapper(payment_id_cb: str):
             # Need access to redis_conn established in app state
-            # Since this runs async, getting request state is hard.
-            # Option 1: Pass redis_conn (done below)
-            # Option 2: Re-establish connection inside callback (less ideal)
-            # Option 3: Use global (not ideal in async framework)
-            redis_conn_for_callback = getattr(app.state, 'redis_conn', None) # Try accessing app state directly
+            redis_conn_for_callback = getattr(app.state, 'redis_conn', None)
+            # Assuming handle_payment_status is defined elsewhere
             await handle_payment_status(job_id, payment_id_cb, redis_conn_callback=redis_conn_for_callback)
 
         await monitoring_payment.start_status_monitoring(payment_callback_wrapper)
+        logger.info(f"Started Masumi payment status monitoring for job {job_id}")
 
-        seller_vkey = os.getenv("SELLER_VKEY")
-        if not seller_vkey:
-            # Don't raise 500, maybe return warning or default key if applicable?
-            logger.warning("SELLER_VKEY not found in environment")
-            # raise HTTPException(status_code=500, detail="Seller vkey not configured")
 
-        # --- Return Response ---
+        # --- Return Response To Frontend ---
+        # This response provides the data needed for the UI and potentially manual /purchase call
         return {
-            "status": "success", "job_id": job_id,
+            "status": "success",
+            "job_id": job_id,
             "blockchainIdentifier": payment_id,
-            "submitResultTime": payment_data_response.get("submitResultTime"),
-            "unlockTime": payment_data_response.get("unlockTime"),
-            "externalDisputeUnlockTime": payment_data_response.get("externalDisputeUnlockTime"),
-            "agentIdentifier": agent_identifier, "sellerVkey": seller_vkey,
+            "submitResultTime": submit_time_from_response, # Pass back value from response
+            "unlockTime": unlock_time_from_response, # Pass back value from response
+            "externalDisputeUnlockTime": external_dispute_time_from_response, # Pass back value from response
+            "agentIdentifier": agent_identifier,
+            "sellerVkey": seller_vkey, # Pass back value retrieved earlier
             "identifierFromPurchaser": identifier_from_purchaser,
-            "amounts": [{"amount": str(amounts[0].amount), "unit": amounts[0].unit}], # Return as strings
+            "amounts": [{"amount": str(a.amount), "unit": a.unit} for a in amounts], # Format amounts correctly
             "input_hash": input_hash
         }
 
-    except HTTPException:
-        raise # Re-raise HTTP exceptions
+    except HTTPException as http_exc:
+        # Log HTTP exceptions specifically if needed, then re-raise
+        logger.error(f"HTTPException during job {job_id if 'job_id' in locals() else 'unknown'} creation: {http_exc.status_code} - {http_exc.detail}")
+        raise http_exc
     except Exception as e:
-        logger.error(f"Error creating job {job_id if 'job_id' in locals() else 'unknown'}: {str(e)}", exc_info=True)
-        # Try to clean up Redis entry if job creation failed mid-way? Difficult.
+        # Log general exceptions
+        logger.error(f"Unexpected error creating job {job_id if 'job_id' in locals() else 'unknown'}: {str(e)}", exc_info=True)
+        # Try to clean up Redis entry if job creation failed mid-way? Difficult. Consider implications.
         raise HTTPException(status_code=500, detail=f"Internal server error creating job: {str(e)}")
 
 @app.post("/simulate_purchase")
